@@ -2,7 +2,7 @@ from mariadb import connect
 from mariadb.connections import Connection
 
 
-def _get_connection() -> Connection:
+def _get_connection() -> Connection: #
     return connect(
         user='root',
         password='b0t1ick0',
