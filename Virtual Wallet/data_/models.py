@@ -12,6 +12,11 @@ class Role:
     USER = 'user'
 
 
+class STATUS:
+
+    PENDING = 'pending'
+    CONFIRMED = 'confirmed'
+    DENIED = 'denied'
 
 class User(BaseModel):
 
