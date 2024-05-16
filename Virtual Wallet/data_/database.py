@@ -5,7 +5,7 @@ from mariadb.connections import Connection
 def _get_connection() -> Connection: #
     return connect(
         user='root',
-        password='your_password',
+        password='b0t1ick0',
         host='localhost',
         port=3306,
         database='virtual_wallet'

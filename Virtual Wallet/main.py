@@ -4,9 +4,10 @@ from routers.auth_router import auth_router
 from routers.admin_router import admin_router
 from routers.transaction_router import transaction_router
 from routers.user_router import user_router
+from common.site_tweaks import *
 
-
-app = FastAPI()
+app = FastAPI(title="PayTheBills",
+    description=description, openapi_tags=tags_metadata)
 
 
 app.include_router(auth_router)

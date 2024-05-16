@@ -5,7 +5,7 @@ from fastapi import HTTPException, Header
 
 
 def create(username: str, password: str, first_name: str, last_name: str, email: str,
-           date_of_birth: date) -> User | None:
+           phone_number: str) -> User | None:
 
     existing_user = read_query('SELECT id FROM users WHERE username = ?', (username,))
     if existing_user:
@@ -14,17 +14,18 @@ def create(username: str, password: str, first_name: str, last_name: str, email:
     hash_password = auth.get_password_hash(password)
 
     generated_id = insert_query(
-        'INSERT INTO users(username, first_name, last_name, email, date_of_birth, hashed_password) VALUES (?,?,?,?,?,?)',
-        (username, first_name, last_name, email, date_of_birth, hash_password))
+        'INSERT INTO users(username, first_name, last_name, email, phone_number, hashed_password) VALUES (?,?,?,?,?,?)',
+        (username, first_name, last_name, email, phone_number, hash_password))
 
 
     return  User(id=generated_id, username=username, password=password, first_name=first_name, last_name=last_name,
-                email=email, date_of_birth=date_of_birth, hashed_password=hash_password)
+                email=email, phone_number=phone_number, hashed_password=hash_password)
+
 
 def find_by_username(username: str) -> User | None:
     data = read_query(
         '''SELECT id, username, first_name,
-        last_name, email, date_of_birth, hashed_password, role
+        last_name, email, phone_number, role, hashed_password, is_blocked
         FROM users WHERE username = ?''',
         (username,))
 

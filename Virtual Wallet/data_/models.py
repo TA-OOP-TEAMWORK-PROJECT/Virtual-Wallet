@@ -83,6 +83,7 @@ class Cards(BaseModel):
                    cardholder_id=cardholder_id,
                    cvv=cvv)
 
+
 class Transactions(BaseModel):
 
     id: int | None = None

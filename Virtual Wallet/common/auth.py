@@ -26,6 +26,7 @@ def current_user(username):
             "first_name": user.first_name,
             "last_name": user.last_name,
             "email": user.email,
+            "phone_number": user.phone_number,
             "hashed_password": user.hashed_password,
             "role": user.role,
             "disabled": False
@@ -36,7 +37,7 @@ def current_user(username):
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 app = FastAPI()
 
 
