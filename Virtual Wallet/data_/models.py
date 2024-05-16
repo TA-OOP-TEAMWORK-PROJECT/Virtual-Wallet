@@ -4,7 +4,6 @@ from datetime import date, datetime
 import numpy as np
 
 
-
 class Role:
 
     ADMIN = 'admin'
@@ -17,9 +16,10 @@ class Status:
     CONFIRMED = 'confirmed'
     DENIED = 'denied'
 
+
 class User(BaseModel):
 
-    id: int = None or None
+    id: int | None = None
     username: str = Field(min_length=2, max_length=20)
     password: str | None = None
     first_name: str = Field(max_length=45)
@@ -33,18 +33,20 @@ class User(BaseModel):
 
     @classmethod
     def from_query_result(cls, id: int, username: str, first_name: str, last_name: str, email: str,
-                          phone_number: str, hashed_password,role):
+                          phone_number: str, role, hashed_password, is_blocked):
         return cls(id=id,
                    username=username,
                    first_name=first_name,
                    last_name=last_name,
                    email=email,
                    phone_number=phone_number,
+                   role=role,
                    hashed_password=hashed_password,
-                   role=role)
+                   is_blocked=is_blocked)
 
     def is_admin(self):
         return self.role == Role.ADMIN
+
 
 class UserInDB(User):
     hashed_password: str
@@ -52,7 +54,7 @@ class UserInDB(User):
 
 class LoginData(BaseModel):
 
-    username: str = Field(max_length=45)
+    username: str = Field(min_length=2, max_length=20)
     password: str
 
 
@@ -67,35 +69,35 @@ class TokenData(BaseModel):
 
 class Cards(BaseModel):
 
-    id: int|None = None
+    id: int | None = None
     number: str = Field(length=16)
     expiration_date: date = np.datetime64('2022') + np.timedelta64(5,'Y')   ####TODO
     cardholder_id: int
     cvv: int = Field(length=3)
 
-@classmethod
-def from_query_result(cls, id: int, number: str, expiration_date:date, cardholder_id: int, cvv:int):
-    return cls(id=id,
-               number=number,
-               expiration_date=expiration_date,
-               cardholder_id=cardholder_id,
-               cvv=cvv)
+    @classmethod
+    def from_query_result(cls, id: int, number: str, expiration_date: date, cardholder_id: int, cvv: int):
+        return cls(id=id,
+                   number=number,
+                   expiration_date=expiration_date,
+                   cardholder_id=cardholder_id,
+                   cvv=cvv)
 
 class Transactions(BaseModel):
 
-    id: int|None = None
+    id: int | None = None
     is_recurring: bool = Field(default=False)
     amount: float
-    status: str|None = None
-    message:str|None = None
+    status: str | None = None
+    message: str | None = None
 
-@classmethod
-def from_query_result(cls, id: int, is_recurring: bool, amount:float, status: str, message:str):
-    return cls(id=id,
-               is_recurring=is_recurring,
-               amount=amount,
-               status=status,
-               message=message)
+    @classmethod
+    def from_query_result(cls, id: int, is_recurring: bool, amount:float, status: str, message: str):
+        return cls(id=id,
+                   is_recurring=is_recurring,
+                   amount=amount,
+                   status=status,
+                   message=message)
 
 
 class Wallet(BaseModel):
@@ -104,18 +106,20 @@ class Wallet(BaseModel):
     amount: float|None
     user_id: int
 
+
 class TransactionHistory(BaseModel):
 
     user_id: int
-    transaction_id: int|None = None
+    transaction_id: int | None = None
     recurring_date: date = datetime.now()  # !
 
     @classmethod
-    def from_query_result(cls, user_id: int, transaction_id: int, recurring_date:date):
+    def from_query_result(cls, user_id: int, transaction_id: int, recurring_date: date):
         return cls(id=id,
                    user_id=user_id,
                    transaction_id=transaction_id,
                    recurring_date=recurring_date)
+
 
 class ContactList(BaseModel):
 
@@ -126,7 +130,7 @@ class ContactList(BaseModel):
     amount_received: float
 
     @classmethod
-    def from_query_result(cls, user_id: int, contact_id: int, amount_sent:date, amount_received: float):
+    def from_query_result(cls, user_id: int, contact_id: int, amount_sent: date, amount_received: float):
         return cls(id=id,
                    user_id=user_id,
                    contact_id=contact_id,
