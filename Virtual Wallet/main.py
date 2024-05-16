@@ -9,7 +9,7 @@ from routers.user_router import user_router
 app = FastAPI()
 
 
-app.include_router(auth_router) #
+app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(user_router)
 app.include_router(transaction_router)

@@ -8,7 +8,7 @@ def _get_connection() -> Connection: #
         password='b0t1ick0',
         host='localhost',
         port=3306,
-        database='web_project'
+        database='virtual_wallet'
     )
 
 

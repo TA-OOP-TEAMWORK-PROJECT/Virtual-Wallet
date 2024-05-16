@@ -21,15 +21,16 @@ class STATUS:
 class User(BaseModel):
 
     id: int = None or None
-    username: str = Field(max_length=45)
+    username: str = Field(min_length=2, max_length=20)
     password: str | None = None
     first_name: str = Field(max_length=45)
     last_name: str = Field(max_length=45)
     email: EmailStr
-    date_of_birth: date | None = None
+    phone_number: str = Field(max_length=10)
     role: str = Field(default=Role.USER, description="User role, e.g., 'admin', 'user'")
     hashed_password: str | None = None
     disabled: bool | None = None
+    is_blocked: bool = Field(default=False)
 
 
     @classmethod
