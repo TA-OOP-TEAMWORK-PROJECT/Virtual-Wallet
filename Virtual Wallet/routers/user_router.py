@@ -5,7 +5,7 @@ from common.auth import *
 user_router = APIRouter(prefix='/users', tags=["Users"])
 
 
-@user_router.post('/register')
+@user_router.post('/register') #
 def register(user_data: User):
     user = user_service.create(
         user_data.username,
