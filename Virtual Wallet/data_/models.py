@@ -17,7 +17,7 @@ class Status:
     DENIED = 'denied'
 
 
-class User(BaseModel):
+class User(BaseModel): #
 
     id: int | None = None
     username: str = Field(min_length=2, max_length=20)
