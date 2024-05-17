@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, constr, conint
 from datetime import date, datetime
 import numpy as np
 
@@ -19,13 +19,13 @@ class Status:
 
 class User(BaseModel):
 
-    id: int = None or None
+    id: int | None = None
     username: str = Field(min_length=2, max_length=20)
     password: str | None = None
     first_name: str = Field(max_length=45)
     last_name: str = Field(max_length=45)
-    email: EmailStr
-    phone_number: str = Field(max_length=10)
+    email: EmailStr                             # Valid and UNIQUE!!!!
+    phone_number: str = Field(max_length=10)    # UNIQUE
     role: str = Field(default=Role.USER, description="User role, e.g., 'admin', 'user'")
     hashed_password: str | None = None
     is_blocked: bool = Field(default=False)
@@ -33,7 +33,7 @@ class User(BaseModel):
 
     @classmethod
     def from_query_result(cls, id: int, username: str, first_name: str, last_name: str, email: str,
-                          phone_number: str, hashed_password,role):
+                          phone_number: str, role, hashed_password, is_blocked):
         return cls(id=id,
                    username=username,
                    first_name=first_name,
@@ -52,7 +52,7 @@ class UserInDB(User):
 
 class LoginData(BaseModel):
 
-    username: str = Field(max_length=45)
+    username: str = Field(min_length=2, max_length=20)
     password: str
 
 
@@ -65,21 +65,22 @@ class TokenData(BaseModel):
     username: str | None = None
 
 
-class Cards(BaseModel):
+class Card(BaseModel):
 
     id: int|None = None
-    number: str = Field(length=16)
-    expiration_date: date = np.datetime64('2022') + np.timedelta64(5,'Y')   ####TODO
-    cardholder_id: int
-    cvv: int = Field(length=3)
+    number: constr(min_length=16, max_length=16)   # random number from the app, cuz we create the card?   # create
+    expiration_date: date #= Field(default_factory=lambda: datetime.today().date() + relativedelta(years=5))  # random date from the app, cuz we create the card?   # create
+    cardholder_name: constr(min_length=2, max_length=30)   # String field with length between 2 and 30 characters
+    cvv: conint(ge=100, le=999)   # random 3 numbers za create
+    cardholder_id: int|None = None
 
-@classmethod
-def from_query_result(cls, id: int, number: str, expiration_date:date, cardholder_id: int, cvv:int):
-    return cls(id=id,
-               number=number,
-               expiration_date=expiration_date,
-               cardholder_id=cardholder_id,
-               cvv=cvv)
+    @classmethod
+    def from_query_result(cls, number: str, expiration_date: date, cardholder_name: str, cvv: int ):
+        return cls(
+                   number=number,
+                   expiration_date=expiration_date,
+                   cardholder_name=cardholder_name,
+                   cvv=cvv)
 
 class Transactions(BaseModel):
 
@@ -89,13 +90,13 @@ class Transactions(BaseModel):
     status: str|None = None
     message:str|None = None
 
-@classmethod
-def from_query_result(cls, id: int, is_recurring: bool, amount:float, status: str, message:str):
-    return cls(id=id,
-               is_recurring=is_recurring,
-               amount=amount,
-               status=status,
-               message=message)
+    @classmethod
+    def from_query_result(cls, id: int, is_recurring: bool, amount:float, status: str, message:str):
+        return cls(id=id,
+                   is_recurring=is_recurring,
+                   amount=amount,
+                   status=status,
+                   message=message)
 
 
 class Wallet(BaseModel):
