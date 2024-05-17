@@ -15,8 +15,8 @@ def add(card, user_id):
         return Response(status_code=401, content='Card already exists!')
 
     generated_id = insert_query('''
-    INSERT INTO cards(number, exp_date, cardholder_name, cvv, cardholder_id)
-    VALUES(?,?,?,?,?)''',
+    INSERT INTO cards(number, exp_date, cardholder_name, cvv, cardholder_id, wallet_id, is_virtual)
+    VALUES(?,?,?,?,?,?,?)''',
     (card.number, card.expiration_date,
     card.cardholder_name, card.cvv, user_id))
 

@@ -5,7 +5,7 @@ from common.auth import get_current_active_user
 from data_.models import Card, User
 from services import card_service
 
-card_router = APIRouter(prefix='/cards')
+card_router = APIRouter(prefix='/cards', tags=["Cards"])
 
 
 @card_router.post("/add")
