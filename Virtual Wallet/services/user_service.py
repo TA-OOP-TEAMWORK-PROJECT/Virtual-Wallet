@@ -1,7 +1,8 @@
 from common import auth
 from data_.models import *
-from data_.database import read_query, insert_query
+from data_.database import read_query, insert_query, update_query
 from fastapi import HTTPException
+from data_.models import User
 
 
 def create(username: str, password: str, first_name: str,
@@ -32,3 +33,22 @@ def find_by_username(username: str) -> User | None:
             (username, ))
 
     return next((User.from_query_result(*row) for row in data), None)
+
+
+def get_user_response(user):
+
+    return {
+        'Username': user.username,
+        'Name': f'{user.first_name} {user.last_name}',
+        'Email': user.email,
+        'Phone Number': user.phone_number
+    }
+
+
+def update_user_profile(username: str, user_update: UserUpdate) -> User | None:
+    hashed_password = auth.get_password_hash(user_update.password) if user_update.password else None
+    update_query(
+        '''UPDATE users SET email = ?, phone_number = ?, hashed_password = ? WHERE username = ?''',
+        (user_update.email, user_update.phone_number, hashed_password, username)
+    )
+    return find_by_username(username)

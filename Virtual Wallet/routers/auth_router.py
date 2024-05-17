@@ -31,16 +31,4 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return Token(access_token=access_token, token_type="bearer")
 
 
-@auth_router.get("/users/me")
-async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]):
 
-    return get_user_response(current_user)
-
-
-def get_user_response(user): #
-
-    return {
-        'Username': user.username,
-        'Name': f'{user.first_name} {user.last_name}',
-        'Email': user.email,
-    }

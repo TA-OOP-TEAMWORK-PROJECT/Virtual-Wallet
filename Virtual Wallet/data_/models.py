@@ -47,6 +47,13 @@ class User(BaseModel):
     def is_admin(self):
         return self.role == Role.ADMIN
 
+
+class UserUpdate(BaseModel):
+    email: EmailStr
+    phone_number: str = Field(max_length=10)
+    password: str | None = None
+
+
 class UserInDB(User):
     hashed_password: str
 
