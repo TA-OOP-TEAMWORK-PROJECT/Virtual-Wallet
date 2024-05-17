@@ -37,7 +37,7 @@ async def read_users_me(current_user: Annotated[User, Depends(get_current_active
     return get_user_response(current_user)
 
 
-def get_user_response(user):
+def get_user_response(user): #
 
     return {
         'Username': user.username,
