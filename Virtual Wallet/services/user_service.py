@@ -23,6 +23,7 @@ def create(username: str, password: str, first_name: str,
     return  User(id=generated_id, username=username, password=password, first_name=first_name, last_name=last_name,
                 email=email, phone_number=phone_number, hashed_password=hash_password)
 
+
 def find_by_username(username: str) -> User | None:
     data = read_query(
         '''SELECT id, username, first_name, last_name,
