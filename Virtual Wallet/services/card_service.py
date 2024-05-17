@@ -3,7 +3,7 @@ from data_.database import insert_query, read_query
 from data_.models import Card
 
 
-def add(card, user_id):
+def add(card, user_id): #
 
     c = Card(number=card.number, expiration_date=card.expiration_date,
     cardholder_name=card.cardholder_name, cvv=card.cvv)
