@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
+from common.response import *
+from data_.models import UserUpdate, AccountDetails
 from services import user_service
 from common.auth import *
 from services.user_service import get_user_response
@@ -28,4 +30,31 @@ async def read_users_me(current_user: Annotated[User, Depends(get_current_active
     return get_user_response(current_user)
 
 
+@user_router.put("/me")
+async def update_user_profile(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    user_update: UserUpdate = Body(...)
+):
+    if not user_update.email:
+        user_update.email = current_user.email
+    if not user_update.phone_number:
+        user_update.phone_number = current_user.phone_number
+    if not user_update.password:
+        user_update.password = None
 
+    update_message = user_service.update_user_profile(current_user.username, user_update)
+    if update_message is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to update user profile."
+        )
+    return {"message": update_message}
+
+
+@user_router.get("/me/details", response_model=AccountDetails)
+async def get_account_details(current_user: Annotated[User, Depends(get_current_active_user)]):
+    account_details = user_service.get_user_account_details(current_user.id)
+    if not account_details:
+        return NotFound(status_code=404, content="Account details not found")
+
+    return account_details
