@@ -77,7 +77,7 @@ class Card(BaseModel):
 
     id: int | None = None
     number: constr(min_length=16, max_length=16)   # random number from the app, cuz we create the card?   # create
-    expiration_date: date #= Field(default_factory=lambda: datetime.today().date() + relativedelta(years=5))  # random date from the app, cuz we create the card?   # create
+    expiration_date: date #=   # random date from the app, cuz we create the card?   # create
     cardholder_name: constr(min_length=2, max_length=30)   # String field with length between 2 and 30 characters
     cvv: conint(ge=100, le=999)   # random 3 numbers za create
     wallet_id: int | None = None
