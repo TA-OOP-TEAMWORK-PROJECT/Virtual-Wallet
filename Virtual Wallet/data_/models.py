@@ -186,7 +186,7 @@ class Categories(BaseModel):
                    )
 
 
-class AccountDetails(BaseModel):
+class AccountDetails(BaseModel): #
     user: User
     cards: list[Card]
     categories: list[Categories]
