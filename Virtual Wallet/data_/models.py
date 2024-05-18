@@ -25,7 +25,7 @@ class User(BaseModel):
     first_name: str = Field(max_length=45)
     last_name: str = Field(max_length=45)
     email: EmailStr                             # Valid and UNIQUE!!!!
-    phone_number: str = Field(max_length=10)    # UNIQUE
+    phone_number: str = constr(min_length=8, max_length=10)   # UNIQUE
     role: str = Field(default=Role.USER, description="User role, e.g., 'admin', 'user'")
     hashed_password: str | None = None
     is_blocked: bool = Field(default=False)
@@ -50,8 +50,16 @@ class User(BaseModel):
 
 class UserUpdate(BaseModel):
     email: EmailStr
-    phone_number: str = Field(max_length=10)
+    phone_number: str = constr(min_length=8, max_length=10)
     password: str | None = None
+
+    @classmethod
+    def from_user(cls, user: User):
+        return cls(
+            email=user.email,
+            phone_number=user.phone_number,
+            password=None
+        )
 
 
 class UserInDB(User):
@@ -77,7 +85,7 @@ class Card(BaseModel):
 
     id: int | None = None
     number: constr(min_length=16, max_length=16)   # random number from the app, cuz we create the card?   # create
-    expiration_date: date #= Field(default_factory=lambda: datetime.today().date() + relativedelta(years=5))  # random date from the app, cuz we create the card?   # create
+    expiration_date: date | None = datetime.now() #= Field(default_factory=lambda: datetime.today().date() + relativedelta(years=5))  # random date from the app, cuz we create the card?   # create
     cardholder_name: constr(min_length=2, max_length=30)   # String field with length between 2 and 30 characters
     cvv: conint(ge=100, le=999)   # random 3 numbers za create
     wallet_id: int | None = None
@@ -169,5 +177,21 @@ class Categories(BaseModel):
     id: int | None = None
     title: str
     transaction_id: int
+
+    @classmethod
+    def from_query_result(cls, id: int, title: str, transaction_id: int = None):
+        return cls(id=id,
+                   title=title,
+                   transaction_id=transaction_id or None
+                   )
+
+
+class AccountDetails(BaseModel):
+    user: User
+    cards: list[Card]
+    categories: list[Categories]
+    contacts: list[ContactList]
+    transactions: list[Transactions]
+
 
 
