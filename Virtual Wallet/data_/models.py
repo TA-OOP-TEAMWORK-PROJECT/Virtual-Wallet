@@ -108,7 +108,7 @@ class Transactions(BaseModel):
     id: int | None = None
     is_recurring: bool = Field(default=False)
     amount: float
-    status: str | None = None
+    status: str = Field(default=Status.PENDING, description="Transaction status, e.g., 'pending', 'confirmed', 'denied'")
     message: str | None = None
     recurring_period: int | None = None
     recurring_date: date | None = datetime.now()
@@ -156,20 +156,42 @@ class ContactList(BaseModel):
 
     id: int | None = None
     user_id: int
-    contact_id: int
+    contact_id: int | None = None
+    ext_contact_name: str | None = None
+    ext_contact_email: EmailStr | None = None
     amount_sent: float | None = None
     amount_received: float | None = None
     utility_iban: str | None = None
 
     @classmethod
-    def from_query_result(cls, user_id: int, contact_id: int, amount_sent: float = None, amount_received: float = None,
-                          utility_iban: str = None):
+    def from_query_result(cls, id: int, user_id: int, contact_id: int = None, ext_contact_name: str = None, ext_contact_email: EmailStr = None,
+                          amount_sent: float = None, amount_received: float = None, utility_iban: str = None):
         return cls(id=id,
                    user_id=user_id,
                    contact_id=contact_id,
+                   ext_contact_name=ext_contact_name,
+                   ext_contact_email=ext_contact_email,
                    amount_sent=amount_sent or None,
                    amount_received=amount_received or None,
                    utility_iban=utility_iban or None)
+
+
+class ViewContacts(BaseModel):
+    id: int
+    contact_name: str | None = None
+    email: EmailStr
+    phone_or_iban: str | None = None
+
+    class Config:
+        from_attributes = True
+        str_strip_whitespace = True
+        exclude_unset = True
+
+
+class ExternalContacts(BaseModel):
+    contact_name: str | constr(min_length=2, max_length=100) = None
+    contact_email: EmailStr | None = None
+    utility_iban: str | constr(min_length=15, max_length=34) = None
 
 
 class Categories(BaseModel):
