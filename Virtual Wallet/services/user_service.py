@@ -139,3 +139,68 @@ def get_user_transactions(wallet_id: int) -> list[Transactions]:
     )
     return [Transactions.from_query_result(*row) for row in data]
  
+ 
+def view_user_contacts(user_id: int) -> list[ViewContacts]: #Easter Egg
+    data = read_query(
+        '''SELECT contact_list.id, 
+                  users.username, 
+                  CASE 
+                      WHEN contact_list.contact_id IS NOT NULL THEN CONCAT(users.first_name, ' ', users.last_name) 
+                      ELSE contact_list.ext_contact_name 
+                  END AS contact_name,
+                  CASE 
+                      WHEN contact_list.contact_id IS NOT NULL THEN users.email 
+                      ELSE contact_list.ext_contact_email 
+                  END AS email,
+                  CASE 
+                      WHEN contact_list.contact_id IS NOT NULL THEN users.phone_number 
+                      ELSE contact_list.utility_iban 
+                  END AS phone_or_iban
+           FROM contact_list 
+           LEFT JOIN users ON contact_list.contact_id = users.id 
+           WHERE contact_list.user_id = ?''',
+        (user_id,)
+    )
+    return [ViewContacts(id=row[0], username=row[1], contact_name=row[2], email=row[3], phone_or_iban=row[4]) for row in data]
+ 
+ 
+def add_user_to_contacts(user_id: int, contact_username: str) -> ContactList:
+    contact_user = find_by_username(contact_username)
+    if not contact_user:
+        raise HTTPException(status_code=404, detail="No such user")
+ 
+    existing_contact = read_query(
+        '''SELECT id FROM contact_list WHERE user_id = ? AND contact_id = ?''',
+        (user_id, contact_user.id)
+    )
+    if existing_contact:
+        raise HTTPException(status_code=400, detail="Contact already exists")
+ 
+    contact_id = insert_query(
+        '''INSERT INTO contact_list (user_id, contact_id) VALUES (?, ?)''',
+        (user_id, contact_user.id)
+    )
+    return ContactList(id=contact_id, user_id=user_id, contact_id=contact_user.id)
+ 
+ 
+ 
+def add_external_contact(user_id: int, contact_data: ExternalContacts) -> ContactList:
+    existing_contact = read_query(
+        '''SELECT id FROM contact_list WHERE user_id = ? AND utility_iban = ?''',
+        (user_id, contact_data.utility_iban)
+    )
+    if existing_contact:
+        raise HTTPException(status_code=400, detail="External contact already exists")
+ 
+    contact_id = insert_query(
+        '''INSERT INTO contact_list (user_id, ext_contact_name, ext_contact_email, utility_iban) VALUES (?, ?, ?, ?)''',
+        (user_id, contact_data.contact_name, contact_data.contact_email, contact_data.utility_iban)
+    )
+ 
+    return ContactList(
+        id=contact_id,
+        user_id=user_id,
+        ext_contact_name=contact_data.contact_name,
+        ext_contact_email=contact_data.contact_email,
+        utility_iban=contact_data.utility_iban
+    )
