@@ -1,24 +1,23 @@
-
 from pydantic import BaseModel, EmailStr, Field, constr, conint
 from datetime import date, datetime
 import numpy as np
-
-
-
+ 
+ 
+ 
 class Role:
-
+ 
     ADMIN = 'admin'
     USER = 'user'
-
-
+ 
+ 
 class Status:
-
+ 
     PENDING = 'pending'
     CONFIRMED = 'confirmed'
     DENIED = 'denied'
-
+ 
 class User(BaseModel):
-
+ 
     id: int | None = None
     username: str = Field(min_length=2, max_length=20)
     password: str | None = None
@@ -30,7 +29,7 @@ class User(BaseModel):
     hashed_password: str | None = None
     is_blocked: bool = Field(default=False)
     disabled: bool | None = None
-
+ 
     @classmethod
     def from_query_result(cls, id: int, username: str, first_name: str, last_name: str, email: str,
                           phone_number: str, role, hashed_password, is_blocked):
@@ -43,16 +42,16 @@ class User(BaseModel):
                    hashed_password=hashed_password,
                    role=role,
                    is_blocked=is_blocked)
-
+ 
     def is_admin(self):
         return self.role == Role.ADMIN
-
-
+ 
+ 
 class UserUpdate(BaseModel):
     email: EmailStr
     phone_number: str = constr(min_length=8, max_length=10)
     password: str | None = None
-
+ 
     @classmethod
     def from_user(cls, user: User):
         return cls(
@@ -60,29 +59,29 @@ class UserUpdate(BaseModel):
             phone_number=user.phone_number,
             password=None
         )
-
-
+ 
+ 
 class UserInDB(User):
     hashed_password: str
-
-
+ 
+ 
 class LoginData(BaseModel):
-
+ 
     username: str = Field(min_length=2, max_length=20)
     password: str
-
-
+ 
+ 
 class Token(BaseModel):
     access_token: str
     token_type: str
-
-
+ 
+ 
 class TokenData(BaseModel):
     username: str | None = None
-
-
+ 
+ 
 class Card(BaseModel):
-
+ 
     id: int | None = None
     number: constr(min_length=16, max_length=16)   # random number from the app, cuz we create the card?   # create
     expiration_date: date | None = datetime.now() #= Field(default_factory=lambda: datetime.today().date() + relativedelta(years=5))  # random date from the app, cuz we create the card?   # create
@@ -90,7 +89,7 @@ class Card(BaseModel):
     cvv: conint(ge=100, le=999)   # random 3 numbers za create
     wallet_id: int | None = None
     is_virtual: bool = Field(default=False)
-
+ 
     @classmethod
     def from_query_result(cls, number: str, expiration_date: date, cardholder_name: str, cvv: int, wallet_id: int, is_virtual: bool ):
         return cls(
@@ -101,10 +100,10 @@ class Card(BaseModel):
                    wallet_id=wallet_id,
                    is_virtual=is_virtual
         )
-
-
+ 
+ 
 class Transactions(BaseModel):
-
+ 
     id: int | None = None
     is_recurring: bool = Field(default=False)
     amount: float
@@ -115,7 +114,7 @@ class Transactions(BaseModel):
     transaction_date: date = datetime.now()
     wallet_id: int | None = None
     receiver_id: int | None = None
-
+ 
     @classmethod
     def from_query_result(cls, id: int, is_recurring: bool, amount: float, status: str, message: str,
                           transaction_date: date, wallet_id: int, receiver_id: int, recurring_period: int = None, recurring_date: date = None):
@@ -129,8 +128,8 @@ class Transactions(BaseModel):
                    receiver_id=receiver_id,
                    recurring_period=recurring_period or None,
                    recurring_date=recurring_date or None)
-
-
+ 
+ 
 # class TransactionHistory(BaseModel):
 #
 #     user_id: int
@@ -143,55 +142,75 @@ class Transactions(BaseModel):
 #                    user_id=user_id,
 #                    transaction_id=transaction_id,
 #                    recurring_date=recurring_date)
-
-
+ 
+ 
 class Wallet(BaseModel):
-
+ 
     id: int | None = None
     amount: float | None = None
     user_id: int
-
-
+ 
+ 
 class ContactList(BaseModel):
-
+ 
     id: int | None = None
     user_id: int
-    contact_id: int
+    contact_id: int | None = None
+    ext_contact_name: str | None = None
+    ext_contact_email: EmailStr | None = None
     amount_sent: float | None = None
     amount_received: float | None = None
     utility_iban: str | None = None
-
+ 
     @classmethod
-    def from_query_result(cls, user_id: int, contact_id: int, amount_sent: float = None, amount_received: float = None,
-                          utility_iban: str = None):
+    def from_query_result(cls, id: int, user_id: int, contact_id: int = None, ext_contact_name: str = None, ext_contact_email: EmailStr = None,
+                          amount_sent: float = None, amount_received: float = None, utility_iban: str = None):
         return cls(id=id,
                    user_id=user_id,
                    contact_id=contact_id,
+                   ext_contact_name=ext_contact_name,
+                   ext_contact_email=ext_contact_email,
                    amount_sent=amount_sent or None,
                    amount_received=amount_received or None,
                    utility_iban=utility_iban or None)
-
-
+ 
+ 
+class ViewContacts(BaseModel):
+    id: int
+    username: str | None = None
+    contact_name: str | None = None
+    email: EmailStr
+    phone_or_iban: str | None = None
+ 
+    class Config:
+        from_attributes = True
+        str_strip_whitespace = True
+        exclude_unset = True
+ 
+ 
+class ExternalContacts(BaseModel):
+    contact_name: str | constr(min_length=2, max_length=100) = None
+    contact_email: EmailStr | None = None
+    utility_iban: str | constr(min_length=15, max_length=34) = None
+ 
+ 
 class Categories(BaseModel):
-
+ 
     id: int | None = None
     title: str
     transaction_id: int
-
+ 
     @classmethod
     def from_query_result(cls, id: int, title: str, transaction_id: int = None):
         return cls(id=id,
                    title=title,
                    transaction_id=transaction_id or None
                    )
-
-
+ 
+ 
 class AccountDetails(BaseModel): #
     user: User
     cards: list[Card]
     categories: list[Categories]
     contacts: list[ContactList]
     transactions: list[Transactions]
-
-
-
