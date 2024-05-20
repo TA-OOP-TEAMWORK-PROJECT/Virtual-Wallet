@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
+from pydantic import constr
+
 from common.response import *
-from data_.models import UserUpdate, AccountDetails
+from data_.models import UserUpdate, AccountDetails, ExternalContacts
 from services import user_service
 from common.auth import *
 from services.user_service import get_user_response
@@ -24,7 +26,7 @@ def register(user_data: User):
         return {'message': 'Failed to create user.'}, 500
 
 
-@user_router.get("/me")
+@user_router.get("/me")   # каква е разликата междъ този ендпойнт и детайли
 async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]):
 
     return get_user_response(current_user)
@@ -58,3 +60,33 @@ async def get_account_details(current_user: Annotated[User, Depends(get_current_
         return NotFound(status_code=404, content="Account details not found")
 
     return account_details
+
+
+@user_router.get("/me/contacts") #Could
+async def view_contacts_list(current_user: Annotated[User, Depends(get_current_active_user)]):
+    contacts = user_service.view_user_contacts(current_user.id)
+    return contacts
+
+
+@user_router.post("/me/contacts") #Could
+async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)],
+                      contact_request: constr(min_length=2, max_length=20)):
+
+    contact = user_service.add_user_to_contacts(current_user.id, contact_request)
+    return contact
+
+
+@user_router.post("/me/contacts/external")
+async def add_external_contact(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    contact_data: ExternalContacts
+):
+    contact = user_service.add_external_contact(current_user.id, contact_data)
+    return contact
+
+
+@user_router.get("/search") # НАмира юзъра по мейл/телефон/юзърнейм и връща списък с юзъри// След като си изберем юзър ни отвежда на страницата с рутъра на transactions от който изпращаме пари на юзър
+async def search_users(current_user: Annotated[User, Depends(get_current_active_user)],
+            search: str):
+
+    return  user_service.get_username_by(search)

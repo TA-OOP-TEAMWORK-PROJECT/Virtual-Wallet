@@ -25,7 +25,8 @@ def add(card, user_id, command):
     (card.number, card.expiration_date,
     card.cardholder_name, card.cvv, wallet.id, card.is_virtual))
 
-    return 'Card was successfully added'
+    card_type = type_card(card.number)
+    return f'Your {card_type} card was successfully added'
 
 
 def delete(card_id):
@@ -35,7 +36,7 @@ def delete(card_id):
     WHERE id = ?''',
     (card_id, ))
 
-    return 'Card was successfully deleted!'
+    return 'Your Card was successfully deleted!'
 
 
 
@@ -63,3 +64,16 @@ def is_existing(numb):
     if not data:
         return False
     return True
+
+def type_card(number):
+
+    if number.startswith("4"):
+        return 'VISA'
+
+    if (51 <= int(number[:2]) <= 55) or 2221 <= int(number[:2]) <= 2720:
+        return 'MASTER'
+
+    return ''
+
+
+
