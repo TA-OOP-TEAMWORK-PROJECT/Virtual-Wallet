@@ -26,7 +26,7 @@ def register(user_data: User):
         return {'message': 'Failed to create user.'}, 500
 
 
-@user_router.get("/me")   # каква е разликата междъ този ендпойнт и детайли
+@user_router.get("/me")
 async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]):
 
     return get_user_response(current_user)
@@ -60,6 +60,27 @@ async def get_account_details(current_user: Annotated[User, Depends(get_current_
         return NotFound(status_code=404, content="Account details not found")
 
     return account_details
+
+
+@user_router.get("/me/contacts") #Could
+async def view_contacts_list(current_user: Annotated[User, Depends(get_current_active_user)]):
+    contacts = user_service.view_user_contacts(current_user.id)
+    return contacts
+
+
+@user_router.post("/me/contacts") #Could
+async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)], contact_request: constr(min_length=2, max_length=20)):
+    contact = user_service.add_user_to_contacts(current_user.id, contact_request)
+    return contact
+
+
+@user_router.post("/me/contacts/external")
+async def add_external_contact(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    contact_data: ExternalContacts
+):
+    contact = user_service.add_external_contact(current_user.id, contact_data)
+    return contact
 
 
 @user_router.get("/me/contacts") #Could

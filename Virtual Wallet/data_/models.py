@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, EmailStr, Field, constr, conint, field_validator
+from pydantic import BaseModel, EmailStr, Field, constr, conint
 from datetime import date, datetime
 import numpy as np
 
