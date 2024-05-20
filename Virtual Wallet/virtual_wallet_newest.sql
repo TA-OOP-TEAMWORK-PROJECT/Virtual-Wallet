@@ -26,10 +26,10 @@ DROP TABLE IF EXISTS `cards`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `cards` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `number` int(11) DEFAULT NULL,
-  `exp_date` datetime DEFAULT NULL,
+  `number` varchar(16) DEFAULT NULL,
+  `exp_date` date DEFAULT NULL,
   `cardholder_name` varchar(30) DEFAULT NULL,
-  `cvv` tinyint(3) DEFAULT NULL,
+  `cvv` int(11) DEFAULT NULL,
   `wallet_id` int(11) NOT NULL,
   `is_virtual` tinyint(4) DEFAULT 0,
   PRIMARY KEY (`id`,`wallet_id`),
@@ -83,18 +83,21 @@ DROP TABLE IF EXISTS `contact_list`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `contact_list` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
-  `contact_id` int(11) NOT NULL,
+  `contact_id` int(11) DEFAULT NULL,
+  `ext_contact_name` varchar(100) DEFAULT NULL,
+  `ext_contact_email` varchar(150) DEFAULT NULL,
   `amount_sent` float DEFAULT NULL,
   `amount_received` float DEFAULT NULL,
   `utility_iban` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`user_id`,`contact_id`,`id`),
+  PRIMARY KEY (`id`,`user_id`),
   UNIQUE KEY `id_UNIQUE` (`id`),
-  KEY `fk_contact_list_users2_idx` (`contact_id`),
+  KEY `fk_contact_list_users1_idx` (`user_id`),
+  KEY `fk_contact_list_users2_idx1` (`contact_id`),
   CONSTRAINT `fk_contact_list_users1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_contact_list_users2` FOREIGN KEY (`contact_id`) REFERENCES `users` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -103,6 +106,7 @@ CREATE TABLE `contact_list` (
 
 LOCK TABLES `contact_list` WRITE;
 /*!40000 ALTER TABLE `contact_list` DISABLE KEYS */;
+INSERT INTO `contact_list` VALUES (2,1,NULL,'Internet Provider','vivatel@phonecompany.bg',NULL,NULL,'BG68500105178297336485'),(3,1,2,NULL,NULL,NULL,NULL,NULL),(4,1,NULL,'NASA','NASA@nasa.com',NULL,NULL,'US68500105178297336485');
 /*!40000 ALTER TABLE `contact_list` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -117,7 +121,7 @@ CREATE TABLE `transactions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `is_recurring` tinyint(4) DEFAULT 0,
   `amount` float NOT NULL,
-  `status` varchar(45) DEFAULT NULL,
+  `status` varchar(45) DEFAULT 'pending',
   `message` text DEFAULT NULL,
   `recurring_period` int(11) DEFAULT NULL,
   `recurring_date` date DEFAULT NULL,
@@ -171,7 +175,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'ikonata','Valeri','Bojinov','malkokote@teenproblem.com','0876556677','$2b$12$9ZdVVCHWg3m5UidsP8Ew4Ofv/1RMTH3NfKquj5clOvlNbMZW4I.n6',0,'user'),(2,'gosho123','Georgi','Georgiev','gosho@teenproblem.com','0888445566','$2b$12$0RCGpz4mYa0n5n71JQYFT.5BOf2JWjKA26S1RTCuc6lFmbpjJ/3QG',0,'user');
+INSERT INTO `users` VALUES (1,'ikonata','Valeri','Bojinov','malkikoteta@teenproblems.com','0888556677','$2b$12$t6.YYwDAFyf/9WAa8I7/xuCr40I42RviZdd3hR7.Z1nRLPTzxT5wC',0,'user'),(2,'gosho123','Georgi','Georgiev','gosho123@teenproblem.com','0888445566','$2b$12$Ax.zW4.inRmzZgbC6f1jKu1TURWzYnT5rtPq1byaMgyojzcE7Naz.',0,'user');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -211,4 +215,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-05-17 15:36:14
+-- Dump completed on 2024-05-20 15:43:27
