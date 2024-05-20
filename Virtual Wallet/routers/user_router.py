@@ -62,3 +62,22 @@ async def get_account_details(current_user: Annotated[User, Depends(get_current_
     return account_details
  
  
+@user_router.get("/me/contacts") #Could
+async def view_contacts_list(current_user: Annotated[User, Depends(get_current_active_user)]):
+    contacts = user_service.view_user_contacts(current_user.id)
+    return contacts
+ 
+ 
+@user_router.post("/me/contacts") #Could
+async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)], contact_request: constr(min_length=2, max_length=20)):
+    contact = user_service.add_user_to_contacts(current_user.id, contact_request)
+    return contact
+ 
+ 
+@user_router.post("/me/contacts/external")
+async def add_external_contact(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    contact_data: ExternalContacts
+):
+    contact = user_service.add_external_contact(current_user.id, contact_data)
+    return contact
