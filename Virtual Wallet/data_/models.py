@@ -84,15 +84,35 @@ class TokenData(BaseModel):
 class Card(BaseModel):
 
     id: int | None = None
-    number: constr(min_length=16, max_length=16)   # random number from the app, cuz we create the card?   # create
-    expiration_date: date | None = datetime.now() #= Field(default_factory=lambda: datetime.today().date() + relativedelta(years=5))  # random date from the app, cuz we create the card?   # create
-    cardholder_name: constr(min_length=2, max_length=30)   # String field with length between 2 and 30 characters
-    cvv: conint(ge=100, le=999)   # random 3 numbers za create
+    number: constr(min_length=13, max_length=19)
+    expiration_date: date | None = datetime.now()
+    cardholder_name: constr(min_length=2, max_length=30)
+    cvv: conint(ge=100, le=999)
     wallet_id: int | None = None
-    is_virtual: bool = Field(default=False)
+    is_virtual: bool | None = Field(default=False)
+
+    @field_validator('number')
+    def validate_card_number(cls, value):    #card_number = "4242 4242 4242 4242"
+
+        # Remove any spaces and convert to a list of integers
+        card_number = [int(digit) for digit in value.replace(" ", "")]
+
+        # Double every second digit from right to left
+        for i in range(len(card_number) - 2, -1, -2):
+            card_number[i] *= 2
+            if card_number[i] > 9:
+                card_number[i] -= 9
+
+            # Sum all the digits
+        total_sum = sum(card_number)
+
+        if not total_sum % 10 == 0:
+            raise ValueError('The card number is not valid')
+        return value
 
     @classmethod
-    def from_query_result(cls, number: str, expiration_date: date, cardholder_name: str, cvv: int, wallet_id: int, is_virtual: bool ):
+    def from_query_result(cls, number: str, expiration_date: date,
+                          cardholder_name: str,cvv: int, wallet_id: int, is_virtual: bool):
         return cls(
                    number=number,
                    expiration_date=expiration_date,
@@ -106,7 +126,7 @@ class Card(BaseModel):
 class Transactions(BaseModel):
 
     id: int | None = None
-    is_recurring: bool = Field(default=False)
+    is_recurring: bool | None = Field(default=False)
     amount: float
     status: str = Field(default=Status.PENDING, description="Transaction status, e.g., 'pending', 'confirmed', 'denied'")
     message: str | None = None
@@ -116,20 +136,35 @@ class Transactions(BaseModel):
     wallet_id: int | None = None
     receiver_id: int | None = None
 
+    @field_validator('is_recurring')
+    def validate_recurring_state(cls, value):
+        if value == 1:
+            return True
+        return False
+
+
     @classmethod
-    def from_query_result(cls, id: int, is_recurring: bool, amount: float, status: str, message: str,
-                          transaction_date: date, wallet_id: int, receiver_id: int, recurring_period: int = None, recurring_date: date = None):
+    def from_query_result(cls, id: int, is_recurring: bool, amount: float,
+                          status: str, message: str|None, transaction_date: date,
+                          recurring_date: date|None, wallet_id: int|None,
+                          receiver_id: int|None):
+
         return cls(id=id,
-                   is_recurring=is_recurring,
+                   is_recurring= cls.validate_recurring_state(is_recurring),
                    amount=amount,
                    status=status,
                    message=message,
                    transaction_date=transaction_date,
+                   recurring_date=recurring_date,
                    wallet_id=wallet_id,
-                   receiver_id=receiver_id,
-                   recurring_period=recurring_period or None,
-                   recurring_date=recurring_date or None)
+                   receiver_id=receiver_id)
 
+class UserTransfer(BaseModel):
+
+    username: str | None = None
+    phone_number: str = None
+    amount: float = Field(gt=0.1)
+     # transaction_date = date.today()
 
 # class TransactionHistory(BaseModel):
 #
@@ -150,6 +185,14 @@ class Wallet(BaseModel):
     id: int | None = None
     amount: float | None = None
     user_id: int
+
+    @classmethod
+    def from_query_result(cls, id:int|None, amount, user_id):
+        return cls(
+            id=id,
+            amount=amount,
+            user_id=user_id
+        )
 
 
 class ContactList(BaseModel):

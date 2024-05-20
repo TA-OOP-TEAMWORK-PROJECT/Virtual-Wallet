@@ -81,3 +81,54 @@ async def add_external_contact(
 ):
     contact = user_service.add_external_contact(current_user.id, contact_data)
     return contact
+
+
+@user_router.get("/me/contacts") #Could
+async def view_contacts_list(current_user: Annotated[User, Depends(get_current_active_user)]):
+    contacts = user_service.view_user_contacts(current_user.id)
+    return contacts
+
+
+@user_router.post("/me/contacts") #Could
+async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)], contact_request: constr(min_length=2, max_length=20)):
+    contact = user_service.add_user_to_contacts(current_user.id, contact_request)
+    return contact
+
+
+@user_router.post("/me/contacts/external")
+async def add_external_contact(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    contact_data: ExternalContacts
+):
+    contact = user_service.add_external_contact(current_user.id, contact_data)
+    return contact
+
+
+@user_router.get("/me/contacts") #Could
+async def view_contacts_list(current_user: Annotated[User, Depends(get_current_active_user)]):
+    contacts = user_service.view_user_contacts(current_user.id)
+    return contacts
+
+
+@user_router.post("/me/contacts") #Could
+async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)],
+                      contact_request: constr(min_length=2, max_length=20)):
+
+    contact = user_service.add_user_to_contacts(current_user.id, contact_request)
+    return contact
+
+
+@user_router.post("/me/contacts/external")
+async def add_external_contact(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    contact_data: ExternalContacts
+):
+    contact = user_service.add_external_contact(current_user.id, contact_data)
+    return contact
+
+
+@user_router.get("/search") # НАмира юзъра по мейл/телефон/юзърнейм и връща списък с юзъри// След като си изберем юзър ни отвежда на страницата с рутъра на transactions от който изпращаме пари на юзър
+async def search_users(current_user: Annotated[User, Depends(get_current_active_user)],
+            search: str):
+
+    return  user_service.get_username_by(search)
