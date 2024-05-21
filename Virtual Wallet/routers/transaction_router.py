@@ -5,7 +5,7 @@ from data_.models import User, UserTransfer
 from services.transaction_service import user_transfer, get_transactions, sort_transactions, get_transaction_response, \
     change_status, new_transfer
 
-transaction_router = APIRouter(prefix="/transactions")
+transaction_router = APIRouter(prefix="/transactions", tags=["Transactions"])
 #pod transactions да се показва листа с приятели или тези на които си изпращал последно
 
 @transaction_router.post("/{username}")

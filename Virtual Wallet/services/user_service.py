@@ -1,4 +1,5 @@
 from common import auth
+from common.response import NotFound
 from data_.models import *
 from data_.database import read_query, insert_query, update_query
 from fastapi import HTTPException
@@ -135,8 +136,7 @@ def get_user_categories(transaction_id: int) -> list[Categories]:
 
 def get_user_contacts(user_id: int) -> list[ContactList]:
     data = read_query(
-        '''SELECT id, user_id, contact_id, ext_contact_name, ext_contact_email, 
-        amount_sent, amount_received, utility_iban FROM contact_list WHERE user_id = ?''',
+        '''SELECT id, user_id, contact_id, external_user_id FROM contact_list WHERE user_id = ?''',
         (user_id,)
     )
     return [ContactList.from_query_result(*row) for row in data]
@@ -150,103 +150,73 @@ def get_user_transactions(wallet_id: int) -> list[Transactions]:
     )
     return [Transactions.from_query_result(*row) for row in data]
 
-def view_user_contacts(user_id: int) -> list[ViewContacts]: #Easter Egg
 
-    data = read_query(
-        '''SELECT contact_list.id,  
-                  CASE 
-                      WHEN contact_list.contact_id IS NOT NULL THEN users.username 
-                      ELSE contact_list.ext_contact_name 
-                  END AS contact_name,
-                  CASE 
-                      WHEN contact_list.contact_id IS NOT NULL THEN users.email 
-                      ELSE contact_list.ext_contact_email 
-                  END AS email,
-                  CASE 
-                      WHEN contact_list.contact_id IS NOT NULL THEN users.phone_number 
-                      ELSE contact_list.utility_iban 
-                  END AS phone_or_iban
-           FROM contact_list 
-           LEFT JOIN users ON contact_list.contact_id = users.id 
-           WHERE contact_list.user_id = ?''',
-        (user_id,)
-    )
-    return [ViewContacts(id=row[0], contact_name=row[1], email=row[2], phone_or_iban=row[3]) for row in data]
+def get_username_by(user_id: int, search: str, contact_list: bool = False) -> dict:
+    results = []
 
-
-def add_user_to_contacts(user_id: int, contact_username: str) -> ContactList:
-    contact_user = find_by_username(contact_username)
-    if not contact_user:
-        raise HTTPException(status_code=404, detail="No such user")
-
-    existing_contact = read_query(
-        '''SELECT id FROM contact_list WHERE user_id = ? AND contact_id = ?''',
-        (user_id, contact_user.id)
-    )
-    if existing_contact:
-        raise HTTPException(status_code=400, detail="Contact already exists")
-
-    contact_id = insert_query(
-        '''INSERT INTO contact_list (user_id, contact_id) VALUES (?, ?)''',
-        (user_id, contact_user.id)
-    )
-    return ContactList(id=contact_id, user_id=user_id, contact_id=contact_user.id)
-
-
-def add_external_contact(user_id: int, contact_data: ExternalContacts) -> ContactList:
-    existing_contact = read_query(
-        '''SELECT id FROM contact_list WHERE user_id = ? AND utility_iban = ?''',
-        (user_id, contact_data.utility_iban)
-    )
-    if existing_contact:
-        raise HTTPException(status_code=400, detail="External contact already exists")
-
-    contact_id = insert_query(
-        '''INSERT INTO contact_list (user_id, ext_contact_name, ext_contact_email, utility_iban) VALUES (?, ?, ?, ?)''',
-        (user_id, contact_data.contact_name, contact_data.contact_email, contact_data.utility_iban)
-    )
-
-    return ContactList(
-        id=contact_id,
-        user_id=user_id,
-        ext_contact_name=contact_data.contact_name,
-        ext_contact_email=contact_data.contact_email,
-        utility_iban=contact_data.utility_iban
-    )
-
-
-def get_username_by(search):
-
-    data = read_query('''
-        SELECT username
+    user_data = read_query('''
+        SELECT username 
         FROM users
         WHERE email LIKE ?
-	    OR username LIKE ?
+        OR username LIKE ?
         OR phone_number LIKE ?''',
         (f'%{search}%', f'%{search}%', f'%{search}%'))
 
+    for row in user_data:
+        results.append(row[0])
 
-    username_dict = {i+1: username for i, username in enumerate(data[0])}
+    if contact_list:
+        user_data = read_query('''
+            SELECT users.username 
+            FROM users
+            JOIN contact_list ON users.id = contact_list.contact_id
+            WHERE contact_list.user_id = ?
+            AND (users.email LIKE ?
+            OR users.username LIKE ?
+            OR users.phone_number LIKE ?)''',
+            (user_id, f'%{search}%', f'%{search}%', f'%{search}%'))
 
-    return username_dict  # ako nqma zapisi?
+        external_user_data = read_query('''
+            SELECT external_user.contact_name 
+            FROM external_user
+            JOIN contact_list ON external_user.id = contact_list.external_user_id
+            WHERE contact_list.user_id = ?
+            AND (external_user.contact_name LIKE ?
+            OR external_user.contact_email LIKE ?
+            OR external_user.iban LIKE ?)''',
+            (user_id, f'%{search}%', f'%{search}%', f'%{search}%'))
+
+        for row in user_data:
+            results.append(row[0])
+
+        for row in external_user_data:
+            results.append(row[0])
+
+    if not results:
+        raise HTTPException(status_code=404, detail="No such user in the system, maybe check your contact list?")
+
+    result_dict = {i + 1: result for i, result in enumerate(results)}
+
+    return result_dict  # ako nqma zapisi? # Оправено
 
 def view_user_contacts(user_id: int) -> list[ViewContacts]: #Easter Egg
     data = read_query(
         '''SELECT contact_list.id,  
                   CASE 
                       WHEN contact_list.contact_id IS NOT NULL THEN users.username 
-                      ELSE contact_list.ext_contact_name 
+                      ELSE external_user.contact_name 
                   END AS contact_name,
                   CASE 
                       WHEN contact_list.contact_id IS NOT NULL THEN users.email 
-                      ELSE contact_list.ext_contact_email 
+                      ELSE external_user.contact_email 
                   END AS email,
                   CASE 
                       WHEN contact_list.contact_id IS NOT NULL THEN users.phone_number 
-                      ELSE contact_list.utility_iban 
+                      ELSE external_user.iban 
                   END AS phone_or_iban
            FROM contact_list 
            LEFT JOIN users ON contact_list.contact_id = users.id 
+           LEFT JOIN external_user ON contact_list.external_user_id = external_user.id
            WHERE contact_list.user_id = ?''',
         (user_id,)
     )
@@ -274,23 +244,28 @@ def add_user_to_contacts(user_id: int, contact_username: str) -> ContactList:
 
 
 def add_external_contact(user_id: int, contact_data: ExternalContacts) -> ContactList:
+    existing_external_user = read_query(
+        '''SELECT id FROM contact_list WHERE user_id = ? AND external_user_id = ?''',
+        (user_id, contact_data.iban))
+
+    if existing_external_user:
+        external_user_id = existing_external_user[0][0]
+    else:
+        external_user_id = insert_query(
+            '''INSERT INTO external_user (contact_name, contact_email, iban) VALUES (?, ?, ?)''',
+            (contact_data.contact_name, contact_data.contact_email, contact_data.iban))
+
     existing_contact = read_query(
-        '''SELECT id FROM contact_list WHERE user_id = ? AND utility_iban = ?''',
-        (user_id, contact_data.utility_iban)
-    )
+        '''SELECT id FROM contact_list WHERE user_id = ? AND external_user_id = ?''',
+        (user_id, external_user_id))
+
     if existing_contact:
         raise HTTPException(status_code=400, detail="External contact already exists")
 
     contact_id = insert_query(
-        '''INSERT INTO contact_list (user_id, ext_contact_name, ext_contact_email, utility_iban) VALUES (?, ?, ?, ?)''',
-        (user_id, contact_data.contact_name, contact_data.contact_email, contact_data.utility_iban)
-    )
+        '''INSERT INTO contact_list (user_id, external_user_id) VALUES (?, ?)''',
+        (user_id, external_user_id))
 
-    return ContactList(
-        id=contact_id,
-        user_id=user_id,
-        ext_contact_name=contact_data.contact_name,
-        ext_contact_email=contact_data.contact_email,
-        utility_iban=contact_data.utility_iban
-    )
+    return ContactList(id=contact_id, user_id=user_id, external_user_id=external_user_id)
+
 

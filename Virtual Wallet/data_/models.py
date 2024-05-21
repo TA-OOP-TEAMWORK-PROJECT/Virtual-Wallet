@@ -217,17 +217,16 @@ class ViewContacts(BaseModel):
     email: EmailStr
     phone_or_iban: str | None = None
 
-    class Config:
-        from_attributes = True
-        str_strip_whitespace = True
-        exclude_unset = True
-
 
 class ExternalContacts(BaseModel):
     id: int | None or None
     contact_name: str | constr(min_length=2, max_length=100) = None
     contact_email: EmailStr | None = None
-    utility_iban: str | constr(min_length=15, max_length=34) = None
+    iban: str | constr(min_length=15, max_length=34) = None
+
+    @classmethod
+    def from_query_result(cls, id: int, contact_name: str = None, contact_email: EmailStr = None, iban: str = None):
+        return cls(id=id, contact_name=contact_name, contact_email=contact_email, iban=iban)
 
 
 class Categories(BaseModel):

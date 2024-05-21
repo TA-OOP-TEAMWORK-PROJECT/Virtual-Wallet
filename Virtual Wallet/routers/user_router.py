@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from pydantic import constr
 
 from common.response import *
@@ -62,19 +62,19 @@ async def get_account_details(current_user: Annotated[User, Depends(get_current_
     return account_details
 
 
-@user_router.get("/me/contacts") #Could
+@user_router.get("/contacts") #Could
 async def view_contacts_list(current_user: Annotated[User, Depends(get_current_active_user)]):
     contacts = user_service.view_user_contacts(current_user.id)
     return contacts
 
 
-@user_router.post("/me/contacts") #Could
+@user_router.post("/contacts") #Could
 async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)], contact_request: constr(min_length=2, max_length=20)):
     contact = user_service.add_user_to_contacts(current_user.id, contact_request)
     return contact
 
 
-@user_router.post("/me/contacts/external")
+@user_router.post("/contacts/external")
 async def add_external_contact(
     current_user: Annotated[User, Depends(get_current_active_user)],
     contact_data: ExternalContacts
@@ -83,8 +83,11 @@ async def add_external_contact(
     return contact
 
 
-@user_router.get("/search") # НАмира юзъра по мейл/телефон/юзърнейм и връща списък с юзъри// След като си изберем юзър ни отвежда на страницата с рутъра на transactions от който изпращаме пари на юзър
-async def search_users(current_user: Annotated[User, Depends(get_current_active_user)],
-            search: str):
-
-    return  user_service.get_username_by(search)
+@user_router.get("/contacts/search")
+async def search_contacts(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    search: str,
+    contact_list: bool = Query(False)
+):
+    contacts = user_service.get_username_by(current_user.id, search, contact_list)
+    return contacts
