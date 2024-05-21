@@ -95,7 +95,7 @@ def get_user_account_details(user_id: int) -> AccountDetails:  #  Дали мо�
     )
 
 
-def find_by_id(user_id: int) -> User:
+def find_by_id(user_id: int) -> User: #
     data = read_query(
         '''SELECT id, username, first_name, last_name,
                   email, phone_number, role, hashed_password, is_blocked
