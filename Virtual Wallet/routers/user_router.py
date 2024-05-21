@@ -68,13 +68,13 @@ async def view_contacts_list(current_user: Annotated[User, Depends(get_current_a
     return contacts
 
 
-@user_router.post("/contacts") #Could
+@user_router.post("/contacts/add") #Could
 async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)], contact_request: constr(min_length=2, max_length=20)):
     contact = user_service.add_user_to_contacts(current_user.id, contact_request)
     return contact
 
 
-@user_router.post("/contacts/external")
+@user_router.post("/contacts/add/external")
 async def add_external_contact(
     current_user: Annotated[User, Depends(get_current_active_user)],
     contact_data: ExternalContacts
@@ -91,3 +91,15 @@ async def search_contacts(
 ):
     contacts = user_service.get_username_by(current_user.id, search, contact_list)
     return contacts
+
+
+@user_router.delete("/contacts/remove")
+async def remove_contact(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    removed_user_id: int
+):
+    success = user_service.remove_contact(current_user.id, removed_user_id)
+    if success:
+        return "Contact removed successfully."
+    else:
+        raise HTTPException(status_code=500, detail="Failed to remove contact.")

@@ -269,3 +269,24 @@ def add_external_contact(user_id: int, contact_data: ExternalContacts) -> Contac
     return ContactList(id=contact_id, user_id=user_id, external_user_id=external_user_id)
 
 
+def remove_contact(user_id: int, removed_user_id: int) -> bool:
+    internal_contact = read_query('''
+        SELECT cl.id
+        FROM contact_list cl
+        WHERE cl.user_id = ? AND cl.contact_id = ?
+    ''', (user_id, removed_user_id))
+
+    external_contact = read_query('''
+        SELECT cl.id
+        FROM contact_list cl
+        WHERE cl.user_id = ? AND cl.external_user_id = ?
+    ''', (user_id, removed_user_id))
+
+    contact_list = internal_contact + external_contact
+    if not contact_list:
+        raise HTTPException(status_code=404, detail="Contact not found in your contact list.")
+
+    update_query('''DELETE FROM contact_list WHERE id = ?''', (contact_list[0][0],))
+
+    return True
+
