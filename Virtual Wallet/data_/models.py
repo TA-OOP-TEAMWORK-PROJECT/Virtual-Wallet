@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, EmailStr, Field, constr, conint
+from pydantic import BaseModel, EmailStr, Field, constr, conint, field_validator
 from datetime import date, datetime
 import numpy as np
 
@@ -135,6 +135,7 @@ class Transactions(BaseModel):
     transaction_date: date = datetime.now()
     wallet_id: int | None = None
     receiver_id: int | None = None
+    contact_list_id: int | None = None
 
     @field_validator('is_recurring')
     def validate_recurring_state(cls, value):
@@ -147,7 +148,7 @@ class Transactions(BaseModel):
     def from_query_result(cls, id: int, is_recurring: bool, amount: float,
                           status: str, message: str|None, transaction_date: date,
                           recurring_date: date|None, wallet_id: int|None,
-                          receiver_id: int|None):
+                          receiver_id: int|None, contact_list_id: int = None):
 
         return cls(id=id,
                    is_recurring= cls.validate_recurring_state(is_recurring),
@@ -157,7 +158,8 @@ class Transactions(BaseModel):
                    transaction_date=transaction_date,
                    recurring_date=recurring_date,
                    wallet_id=wallet_id,
-                   receiver_id=receiver_id)
+                   receiver_id=receiver_id,
+                   contact_list_id=contact_list_id)
 
 class UserTransfer(BaseModel):
 
@@ -200,23 +202,13 @@ class ContactList(BaseModel):
     id: int | None = None
     user_id: int
     contact_id: int | None = None
-    ext_contact_name: str | None = None
-    ext_contact_email: EmailStr | None = None
-    amount_sent: float | None = None
-    amount_received: float | None = None
-    utility_iban: str | None = None
-
+    external_user_id: int | None = None
     @classmethod
-    def from_query_result(cls, id: int, user_id: int, contact_id: int = None, ext_contact_name: str = None, ext_contact_email: EmailStr = None,
-                          amount_sent: float = None, amount_received: float = None, utility_iban: str = None):
+    def from_query_result(cls, id: int, user_id: int, contact_id: int = None, external_user_id: int = None):
         return cls(id=id,
                    user_id=user_id,
                    contact_id=contact_id,
-                   ext_contact_name=ext_contact_name,
-                   ext_contact_email=ext_contact_email,
-                   amount_sent=amount_sent or None,
-                   amount_received=amount_received or None,
-                   utility_iban=utility_iban or None)
+                   external_user_id=external_user_id)
 
 
 class ViewContacts(BaseModel):
@@ -232,6 +224,7 @@ class ViewContacts(BaseModel):
 
 
 class ExternalContacts(BaseModel):
+    id: int | None or None
     contact_name: str | constr(min_length=2, max_length=100) = None
     contact_email: EmailStr | None = None
     utility_iban: str | constr(min_length=15, max_length=34) = None

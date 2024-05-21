@@ -86,15 +86,13 @@ CREATE TABLE `contact_list` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `contact_id` int(11) DEFAULT NULL,
-  `ext_contact_name` varchar(100) DEFAULT NULL,
-  `ext_contact_email` varchar(150) DEFAULT NULL,
-  `amount_sent` float DEFAULT NULL,
-  `amount_received` float DEFAULT NULL,
-  `utility_iban` varchar(45) DEFAULT NULL,
+  `external_user_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`,`user_id`),
   UNIQUE KEY `id_UNIQUE` (`id`),
   KEY `fk_contact_list_users1_idx` (`user_id`),
   KEY `fk_contact_list_users2_idx1` (`contact_id`),
+  KEY `fk_contact_list_external_user1_idx` (`external_user_id`),
+  CONSTRAINT `fk_contact_list_external_user1` FOREIGN KEY (`external_user_id`) REFERENCES `external_user` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_contact_list_users1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_contact_list_users2` FOREIGN KEY (`contact_id`) REFERENCES `users` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
@@ -106,8 +104,32 @@ CREATE TABLE `contact_list` (
 
 LOCK TABLES `contact_list` WRITE;
 /*!40000 ALTER TABLE `contact_list` DISABLE KEYS */;
-INSERT INTO `contact_list` VALUES (2,1,NULL,'Internet Provider','vivatel@phonecompany.bg',NULL,NULL,'BG68500105178297336485'),(3,1,2,NULL,NULL,NULL,NULL,NULL),(4,1,NULL,'NASA','NASA@nasa.com',NULL,NULL,'US68500105178297336485');
 /*!40000 ALTER TABLE `contact_list` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `external_user`
+--
+
+DROP TABLE IF EXISTS `external_user`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `external_user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `contact_name` varchar(100) NOT NULL,
+  `contact_email` varchar(150) DEFAULT NULL,
+  `iban` varchar(34) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `external_user`
+--
+
+LOCK TABLES `external_user` WRITE;
+/*!40000 ALTER TABLE `external_user` DISABLE KEYS */;
+/*!40000 ALTER TABLE `external_user` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -127,11 +149,14 @@ CREATE TABLE `transactions` (
   `recurring_date` date DEFAULT NULL,
   `transaction_date` date DEFAULT NULL,
   `wallet_id` int(11) NOT NULL,
-  `receiver_id` int(11) NOT NULL,
+  `receiver_id` int(11) DEFAULT NULL,
+  `contact_list_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`),
   KEY `fk_transactions_wallet1_idx` (`wallet_id`),
   KEY `fk_transactions_users1_idx` (`receiver_id`),
+  KEY `fk_transactions_contact_list1_idx` (`contact_list_id`),
+  CONSTRAINT `fk_transactions_contact_list1` FOREIGN KEY (`contact_list_id`) REFERENCES `contact_list` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_transactions_users1` FOREIGN KEY (`receiver_id`) REFERENCES `users` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_transactions_wallet1` FOREIGN KEY (`wallet_id`) REFERENCES `wallet` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
@@ -175,7 +200,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'ikonata','Valeri','Bojinov','malkikoteta@teenproblems.com','0888556677','$2b$12$t6.YYwDAFyf/9WAa8I7/xuCr40I42RviZdd3hR7.Z1nRLPTzxT5wC',0,'user'),(2,'gosho123','Georgi','Georgiev','gosho123@teenproblem.com','0888445566','$2b$12$Ax.zW4.inRmzZgbC6f1jKu1TURWzYnT5rtPq1byaMgyojzcE7Naz.',0,'user');
+INSERT INTO `users` VALUES (1,'ikonata','Valeri','Bojinov','user@example.com','0888556677','$2b$12$t6.YYwDAFyf/9WAa8I7/xuCr40I42RviZdd3hR7.Z1nRLPTzxT5wC',0,'user'),(2,'gosho123','Georgi','Georgiev','gosho123@teenproblem.com','0888445566','$2b$12$Ax.zW4.inRmzZgbC6f1jKu1TURWzYnT5rtPq1byaMgyojzcE7Naz.',0,'user');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -215,4 +240,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-05-20 15:43:27
+-- Dump completed on 2024-05-21 12:43:12
