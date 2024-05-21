@@ -2,7 +2,14 @@ from pydantic import BaseModel, EmailStr, Field, validator
 from datetime import date
 import re
 
+<<<<<<< Updated upstream
 from data_.database import read_query
+=======
+from pydantic import BaseModel, EmailStr, Field, constr, conint, field_validator
+from datetime import date, datetime
+#import numpy as np 
+
+>>>>>>> Stashed changes
 
 
 class Role:
@@ -114,11 +121,21 @@ class Card(BaseModel):
     cardholder_id: int = None
     cvv: int = None
 
+<<<<<<< Updated upstream
     @validator('number')
     def validate_number(cls, v):
         if not v:
             raise ValueError('Card number is required')
         return v
+=======
+    id: int | None = None
+    number: constr(min_length=13, max_length=19) # type: ignore
+    expiration_date: date | None = datetime.now()
+    cardholder_name: constr(min_length=2, max_length=30) # type: ignore
+    cvv: conint(ge=100, le=999) # type: ignore
+    wallet_id: int | None = None
+    is_virtual: bool | None = Field(default=False)
+>>>>>>> Stashed changes
 
     @validator('exp_date')
     def validate_exp_date(cls, v):
@@ -169,5 +186,77 @@ class TransactionHistory(BaseModel):
 
 
 class Wallet(BaseModel):
+<<<<<<< Updated upstream
     id = int or None
     amount = float or None
+=======
+
+    id: int | None = None
+    amount: float | None = None
+    user_id: int
+
+    @classmethod
+    def from_query_result(cls, id:int|None, amount, user_id):
+        return cls(
+            id=id,
+            amount=amount,
+            user_id=user_id
+        )
+
+
+class ContactList(BaseModel):
+
+    id: int | None = None
+    user_id: int
+    contact_id: int | None = None
+    external_user_id: int | None = None
+    @classmethod
+    def from_query_result(cls, id: int, user_id: int, contact_id: int = None, external_user_id: int = None):
+        return cls(id=id,
+                   user_id=user_id,
+                   contact_id=contact_id,
+                   external_user_id=external_user_id)
+
+
+class ViewContacts(BaseModel):
+    id: int
+    contact_name: str | None = None
+    email: EmailStr
+    phone_or_iban: str | None = None
+
+
+class ExternalContacts(BaseModel):
+    id: int | None or None # type: ignore
+    contact_name: str | constr(min_length=2, max_length=100) = None # type: ignore
+    contact_email: EmailStr | None = None
+    iban: str | constr(min_length=15, max_length=34) = None # type: ignore
+
+    @classmethod
+    def from_query_result(cls, id: int, contact_name: str = None, contact_email: EmailStr = None, iban: str = None):
+        return cls(id=id, contact_name=contact_name, contact_email=contact_email, iban=iban)
+
+
+class Categories(BaseModel):
+
+    id: int | None = None
+    title: str
+    transaction_id: int
+
+    @classmethod
+    def from_query_result(cls, id: int, title: str, transaction_id: int = None):
+        return cls(id=id,
+                   title=title,
+                   transaction_id=transaction_id or None
+                   )
+
+
+class AccountDetails(BaseModel): #
+    user: User
+    cards: list[Card]
+    categories: list[Categories]
+    contacts: list[ContactList]
+    transactions: list[Transactions]
+
+
+
+>>>>>>> Stashed changes
