@@ -166,20 +166,7 @@ class UserTransfer(BaseModel):
     username: str | None = None
     phone_number: str = None
     amount: float = Field(gt=0.1)
-     # transaction_date = date.today()
 
-# class TransactionHistory(BaseModel):
-#
-#     user_id: int
-#     transaction_id: int | None = None
-#     recurring_date: date = datetime.now()  # !
-#
-#     @classmethod
-#     def from_query_result(cls, user_id: int, transaction_id: int, recurring_date:date):
-#         return cls(id=id,
-#                    user_id=user_id,
-#                    transaction_id=transaction_id,
-#                    recurring_date=recurring_date)
 
 
 class Wallet(BaseModel):

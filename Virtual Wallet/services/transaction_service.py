@@ -16,7 +16,7 @@ def user_transfer(cur_transaction: UserTransfer, username: str, cur_user): #Ð’ Ð
 
 
     cur_user_wallet = get_user_wallet(cur_user.id)
-    receiver_user_wallet = get_user_wallet(receiver_user.id)
+    receiver_user_wallet = get_user_wallet(receiver_user.id)   # da proverq dali ima dostatychno v walleta
 
     cur_user_insert = insert_query('''
     INSERT INTO transactions(amount, transaction_date, wallet_id, receiver_id)

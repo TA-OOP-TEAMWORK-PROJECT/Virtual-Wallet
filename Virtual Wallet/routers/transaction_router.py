@@ -19,7 +19,9 @@ def transfer_to_user(cur_transaction: UserTransfer, username: str,
 @transaction_router.post("/new_transaction/in_app")
 def create_new_transaction():
 
-    result = new_transfer()
+    result = new_transfer()  #kogato pak iskame kym user, no wlezem ot drugo mqstoi trqbwa da tyrsim po telefon tralala i posle da izpratims usernama kym gornoto
+
+@transaction_router.post("/new_transaction/bank_transfer")
 
 
 @transaction_router.get("/")
@@ -42,7 +44,3 @@ def status_update(transaction_id: int, new_status: str,
     result = change_status(transaction_id, new_status)
     return result
 
-
-#
-# @transaction_router.get("/{id}")
-# def view_transactions()
