@@ -1,9 +1,6 @@
 
 from pydantic import BaseModel, EmailStr, Field, constr, conint, field_validator
 from datetime import date, datetime
-import numpy as np
-
-
 
 class Role:
 
@@ -161,6 +158,30 @@ class Transactions(BaseModel):
                    receiver_id=receiver_id,
                    contact_list_id=contact_list_id)
 
+class RecurringTransaction(BaseModel):
+
+    id: int | None = None
+    amount: float
+    recurring_period: int | None = None
+    recurring_date: date | None = datetime.now()
+    transaction_date: date = datetime.now()
+    wallet_id: int | None = None
+    contact_list_id: int
+
+    @classmethod
+    def from_query_result(cls, id: int, amount: float, recurring_period: int,
+                          recurring_date: date|None, transaction_date: date, wallet_id: int|None, contact_list_id:int):
+
+        return cls(id=id,
+                   amount=amount,
+                   recurring_period=recurring_period,
+                   recurring_date=recurring_date,
+                   transaction_date=transaction_date,
+                   wallet_id=wallet_id,
+                   contact_list_id=contact_list_id)
+
+
+
 class UserTransfer(BaseModel):
 
     username: str | None = None
@@ -207,6 +228,9 @@ class ViewContacts(BaseModel):
 
 class ExternalContacts(BaseModel):
     id: int | None = None
+    is_recurring: int|None = None
+    recurring_date: date|None = None
+    recurring_period: int|None = None
     contact_name: str | constr(min_length=2, max_length=100)
     contact_email: EmailStr | None = None
     iban: str | constr(min_length=15, max_length=34)
@@ -236,6 +260,4 @@ class AccountDetails(BaseModel): #
     categories: list[Categories]
     contacts: list[ContactList]
     transactions: list[Transactions]
-
-
 

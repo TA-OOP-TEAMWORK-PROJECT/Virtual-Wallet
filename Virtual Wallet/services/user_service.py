@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from data_.models import User
 
 
-def create(username: str, password: str, first_name: str,
+def create(username: str, password: str, first_name: str, # da mu se syzdawa wallet na usera
            last_name: str, email: str, phone_number: str) -> User | None:
 
     existing_user = read_query('SELECT id FROM users WHERE username = ?', (username,))

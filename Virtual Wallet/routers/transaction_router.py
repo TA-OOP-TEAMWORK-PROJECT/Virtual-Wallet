@@ -1,19 +1,55 @@
 from typing import Annotated
 from fastapi import Depends, APIRouter
-from common.auth import get_current_active_user
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+from jose import jwt
+
+from common.auth import get_current_active_user, SECRET_KEY
 from data_.models import User, UserTransfer, ExternalContacts
 from services.transaction_service import user_transfer, get_transactions, sort_transactions, get_transaction_response, \
-    change_status, new_transfer, bank_transfer
+    change_status, new_transfer, bank_transfer, recurring_transactions
 
 transaction_router = APIRouter(prefix="/transactions", tags=["Transactions"])
-#pod transactions да се показва листа с приятели или тези на които си изпращал последно
+
+scheduler = BackgroundScheduler()
+
+
+
+"""new_day = calculate_new_day()
+        new_hour = calculate_new_hour()
+        new_minute = calculate_new_minute()
+
+        # Update the CronTrigger with the new parameters
+        cron_trigger.day = new_day
+        cron_trigger.hour = new_hour
+        cron_trigger.minute = new_minute"""
+
+
+
+@transaction_router.on_event('startup')
+async def startup_event():
+
+    cron_trigger = CronTrigger(hour=12, minute=0)
+
+    recurring_transactions()
+
+    scheduler.start()
+
+
+
+
+# @transaction_router.on_event("shutdown")
+# def shutdown_event():
+#     scheduler.shutdown()
+#
+
+
 
 @transaction_router.post("/{username}")
 def transfer_to_user(cur_transaction: UserTransfer, username: str,
                         current_user: Annotated[User, Depends(get_current_active_user)]):
 
     return user_transfer(cur_transaction, username, current_user)
-
 
 
 @transaction_router.post("/new_transaction/in_app")
