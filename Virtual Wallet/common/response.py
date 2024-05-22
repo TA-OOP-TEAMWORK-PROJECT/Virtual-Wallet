@@ -1,4 +1,16 @@
 from fastapi import Response
+from fastapi import HTTPException
+
+
+
+
+class CustomHTTPException(HTTPException):
+    def __init__(self, status_code: int, detail: str, existing_contact: list):
+        super().__init__(status_code=status_code, detail=detail)
+        self.existing_contact = existing_contact
+
+
+
 
 
 class BadRequest(Response):

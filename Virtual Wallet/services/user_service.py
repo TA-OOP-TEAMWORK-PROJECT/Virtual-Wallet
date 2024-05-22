@@ -1,5 +1,5 @@
 from common import auth
-from common.response import NotFound
+from common.response import NotFound, CustomHTTPException
 from data_.models import *
 from data_.database import read_query, insert_query, update_query
 from fastapi import HTTPException
@@ -104,6 +104,34 @@ def find_by_id(user_id: int) -> User:
     )
     return next((User.from_query_result(*row) for row in data), None)
 
+# def get_external_user_by_name(name:str):
+#
+#     data = read_query('''
+#     SELECT id, contact_name, contact_email, iban
+#     FROM external_user
+#     WHERE contact_name = ?''',
+#     (name, ))
+#
+#     id, contact_name, contact_email, iban = data[0]
+#     return ExternalContacts(id=id, contact_name=contact_name, contact_email=contact_email, iban=iban)
+
+
+def get_contact_list(current_user, contact_name):
+
+    data = read_query('''
+    SELECT contact_list.id, user_id, external_user_id
+    FROM contact_list
+    JOIN external_user
+    ON external_user.id = contact_list.external_user_id
+    WHERE contact_list.user_id = ?
+    AND external_user.contact_name = ?''',
+                      (current_user.id, contact_name))
+
+    id, user_id, external_user_id = data[0]
+    return ContactList(id=id, user_id=user_id, external_user_id=external_user_id)
+
+
+
 
 def get_user_cards(wallet_id: int) -> list[Card]:
     data = read_query(
@@ -193,7 +221,8 @@ def get_username_by(user_id: int, search: str, contact_list: bool = False) -> di
             results.append(row[0])
 
     if not results:
-        raise HTTPException(status_code=404, detail="No such user in the system, maybe check your contact list?")
+        raise CustomHTTPException(status_code=404, detail="No such user in the system, maybe check your contact list?",
+                                  existing_contact=results)
 
     result_dict = {i + 1: result for i, result in enumerate(results)}
 
@@ -260,6 +289,7 @@ def add_external_contact(user_id: int, contact_data: ExternalContacts) -> Contac
         (user_id, external_user_id))
 
     if existing_contact:
+
         raise HTTPException(status_code=400, detail="External contact already exists")
 
     contact_id = insert_query(
