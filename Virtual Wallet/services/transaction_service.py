@@ -1,9 +1,10 @@
 from datetime import date, datetime
-from fastapi import Response
+from fastapi import Response, HTTPException
+import logging
 from data_.database import insert_query, update_query, read_query
 from data_.models import UserTransfer, User, Transactions
 from services.card_service import find_wallet_id
-from services.user_service import find_by_username, get_user_wallet, find_by_id
+from services.user_service import find_by_username, get_user_wallet, find_by_id, get_username_by, add_external_contact
 
 
 def user_transfer(cur_transaction: UserTransfer, username: str, cur_user): #В бодито има само сума
@@ -47,8 +48,33 @@ def user_transfer(cur_transaction: UserTransfer, username: str, cur_user): #В �
     return Response(status_code=200, content=f'The amount of {cur_transaction.amount} was sent to {receiver_user.username}')
 
 
-def new_transfer():
-     pass
+def new_transfer(cur_transaction, search, cur_user):
+
+     receiver = get_username_by(cur_user.id, search, contact_list=False)[1]
+
+     return user_transfer(cur_transaction, receiver, cur_user)
+
+
+def bank_transfer(ext_user, cur_transaction, current_user):
+    search = ext_user.iban
+
+    def wrapper():
+        try:
+            external_contact = get_username_by(ext_user, search, contact_list=True)[1]
+            return external_contact # napishi si func deto namira po iban extusers
+        except HTTPException as ex:
+            logging.basicConfig(level=logging.INFO)
+            logger = logging.getLogger(__name__)
+            logger.error(f"Exception when searching for external contact: {ex}", exc_info=True)
+
+            add_external_contact(current_user.id, ext_user)
+
+    wrapper()
+
+
+
+
+
 
 
 

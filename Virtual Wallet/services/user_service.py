@@ -151,7 +151,7 @@ def get_user_transactions(wallet_id: int) -> list[Transactions]:
     return [Transactions.from_query_result(*row) for row in data]
 
 
-def get_username_by(user_id: int, search: str, contact_list: bool = False) -> dict:
+def get_username_by(user_id: int, search: str, contact_list: bool = False) -> dict: #не го търси в contact list а в цялото приложение
     results = []
 
     user_data = read_query('''
@@ -165,12 +165,12 @@ def get_username_by(user_id: int, search: str, contact_list: bool = False) -> di
     for row in user_data:
         results.append(row[0])
 
-    if contact_list:
+    if contact_list: # moje da si vzeme user_id ot users napravo
         user_data = read_query('''
             SELECT users.username 
             FROM users
             JOIN contact_list ON users.id = contact_list.contact_id
-            WHERE contact_list.user_id = ?
+            WHERE contact_list.user_id = ? 
             AND (users.email LIKE ?
             OR users.username LIKE ?
             OR users.phone_number LIKE ?)''',

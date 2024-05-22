@@ -1,9 +1,9 @@
 from typing import Annotated
 from fastapi import Depends, APIRouter
 from common.auth import get_current_active_user
-from data_.models import User, UserTransfer
+from data_.models import User, UserTransfer, ExternalContacts
 from services.transaction_service import user_transfer, get_transactions, sort_transactions, get_transaction_response, \
-    change_status, new_transfer
+    change_status, new_transfer, bank_transfer
 
 transaction_router = APIRouter(prefix="/transactions", tags=["Transactions"])
 #pod transactions да се показва листа с приятели или тези на които си изпращал последно
@@ -17,11 +17,20 @@ def transfer_to_user(cur_transaction: UserTransfer, username: str,
 
 
 @transaction_router.post("/new_transaction/in_app")
-def create_new_transaction():
+def create_new_transaction(cur_transaction: UserTransfer,
+                           search: str,
+                           current_user: Annotated[User, Depends(get_current_active_user)],
+                           ):
 
-    result = new_transfer()  #kogato pak iskame kym user, no wlezem ot drugo mqstoi trqbwa da tyrsim po telefon tralala i posle da izpratims usernama kym gornoto
+    return  new_transfer(cur_transaction, search, current_user)
+
 
 @transaction_router.post("/new_transaction/bank_transfer")
+def create_bank_transfer(ext_user: ExternalContacts,
+                         cur_transaction: UserTransfer,
+                         current_user: Annotated[User, Depends(get_current_active_user)]):
+
+    return bank_transfer(ext_user, cur_transaction, current_user)
 
 
 @transaction_router.get("/")

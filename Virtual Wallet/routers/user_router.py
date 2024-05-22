@@ -74,7 +74,7 @@ async def add_contact(current_user: Annotated[User, Depends(get_current_active_u
     return contact
 
 
-@user_router.post("/contacts/external")
+@user_router.post("/contacts/external") #proeni imeto za da se izbegne greshka s rekursuq
 async def add_external_contact(
     current_user: Annotated[User, Depends(get_current_active_user)],
     contact_data: ExternalContacts

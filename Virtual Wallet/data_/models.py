@@ -164,7 +164,7 @@ class Transactions(BaseModel):
 class UserTransfer(BaseModel):
 
     username: str | None = None
-    phone_number: str = None
+    phone_number: str|None = None
     amount: float = Field(gt=0.1)
 
 
@@ -206,10 +206,10 @@ class ViewContacts(BaseModel):
 
 
 class ExternalContacts(BaseModel):
-    id: int | None or None
-    contact_name: str | constr(min_length=2, max_length=100) = None
+    id: int | None = None
+    contact_name: str | constr(min_length=2, max_length=100)
     contact_email: EmailStr | None = None
-    iban: str | constr(min_length=15, max_length=34) = None
+    iban: str | constr(min_length=15, max_length=34)
 
     @classmethod
     def from_query_result(cls, id: int, contact_name: str = None, contact_email: EmailStr = None, iban: str = None):
