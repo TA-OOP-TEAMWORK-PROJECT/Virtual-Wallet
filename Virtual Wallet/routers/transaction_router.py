@@ -33,7 +33,7 @@ async def startup_event():
 
     recurring_transactions()
 
-    scheduler.start()
+    scheduler.start() #
 
 
 
