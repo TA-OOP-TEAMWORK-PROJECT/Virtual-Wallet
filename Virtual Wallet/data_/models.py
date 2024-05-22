@@ -1,15 +1,8 @@
-from pydantic import BaseModel, EmailStr, Field, validator
-from datetime import date
-import re
 
-<<<<<<< Updated upstream
-from data_.database import read_query
-=======
 from pydantic import BaseModel, EmailStr, Field, constr, conint, field_validator
 from datetime import date, datetime
-#import numpy as np 
+import numpy as np
 
->>>>>>> Stashed changes
 
 
 class Role:
@@ -18,7 +11,7 @@ class Role:
     USER = 'user'
 
 
-class STATUS:
+class Status:
 
     PENDING = 'pending'
     CONFIRMED = 'confirmed'
@@ -26,63 +19,48 @@ class STATUS:
 
 class User(BaseModel):
 
-    id: int = None or None
-    username: str = Field(max_length=20)
+    id: int | None = None
+    username: str = Field(min_length=2, max_length=20)
     password: str | None = None
     first_name: str = Field(max_length=45)
     last_name: str = Field(max_length=45)
-    email: EmailStr
-    phone_number: str = None
-    date_of_birth: date | None = None
+    email: EmailStr                             # Valid and UNIQUE!!!!
+    phone_number: str = constr(min_length=8, max_length=10)   # UNIQUE
     role: str = Field(default=Role.USER, description="User role, e.g., 'admin', 'user'")
-    wallet_id: int = None or None
     hashed_password: str | None = None
-    is_blocked: bool | None = None
+    is_blocked: bool = Field(default=False)
+    disabled: bool | None = None
 
-    @validator('password')
-    def validate_password(cls, v):
-        if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
-        if not re.search(r'[A-Z]', v):
-            raise ValueError('Password must contain at least one capital letter')
-        if not re.search(r'\d', v):
-            raise ValueError('Password must contain at least one digit')
-        if not re.search(r'[+\-*&^]+', v):
-            raise ValueError('Password must contain at least one special symbol (+, -, *, &, ^, …)')
-        return v
-    
-    @validator('email')
-    def validate_email(cls, v):
-        if read_query('SELECT * FROM users WHERE email = %s', (v,)):
-            raise ValueError('Email must be unique')
-        return v
+    @classmethod
+    def from_query_result(cls, id: int, username: str, first_name: str, last_name: str, email: str,
+                          phone_number: str, role, hashed_password, is_blocked):
+        return cls(id=id,
+                   username=username,
+                   first_name=first_name,
+                   last_name=last_name,
+                   email=email,
+                   phone_number=phone_number,
+                   hashed_password=hashed_password,
+                   role=role,
+                   is_blocked=is_blocked)
 
-    @validator('phone_number')
-    def validate_phone_number(cls, v):
-        if not v.isdigit() or len(v) != 10:
-            raise ValueError('Phone number must be exactly 10 digits')
-        if read_query('SELECT * FROM users WHERE phone_number = %s', (v,)):
-            raise ValueError('Phone number must be unique')
-        return v
+    def is_admin(self):
+        return self.role == Role.ADMIN
 
 
-@classmethod
-def from_query_result(cls, id: int, username: str, first_name: str, last_name: str, email: str, phone_number: int, wallet_id: int, is_blocked,
-                          date_of_birth: date, hashed_password,role):
-    return cls(id=id,
-                 username=username,
-                first_name=first_name,
-                last_name=last_name,
-                email=email,
-                phone_number=phone_number,
-                wallet_id=wallet_id,
-                date_of_birth=date_of_birth,
-                hashed_password=hashed_password,
-                is_blocked=is_blocked,
-                role=role)
+class UserUpdate(BaseModel):
+    email: EmailStr
+    phone_number: str = constr(min_length=8, max_length=10)
+    password: str | None = None
 
-def is_admin(self):
-    return self.role == Role.ADMIN
+    @classmethod
+    def from_user(cls, user: User):
+        return cls(
+            email=user.email,
+            phone_number=user.phone_number,
+            password=None
+        )
+
 
 class UserInDB(User):
     hashed_password: str
@@ -90,20 +68,9 @@ class UserInDB(User):
 
 class LoginData(BaseModel):
 
-    username: str = Field(max_length=20)
+    username: str = Field(min_length=2, max_length=20)
     password: str
 
-    @validator('password')
-    def validate_password(cls, v):
-        if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
-        if not re.search(r'[A-Z]', v):
-            raise ValueError('Password must contain at least one capital letter')
-        if not re.search(r'\d', v):
-            raise ValueError('Password must contain at least one digit')
-        if not re.search(r'[+\-*&^]+', v):
-            raise ValueError('Password must contain at least one special symbol (+, -, *, &, ^, …)')
-        return v
 
 class Token(BaseModel):
     access_token: str
@@ -115,81 +82,107 @@ class TokenData(BaseModel):
 
 
 class Card(BaseModel):
-    id: int = None
-    number: int = None
-    exp_date: date = None
-    cardholder_id: int = None
-    cvv: int = None
 
-<<<<<<< Updated upstream
-    @validator('number')
-    def validate_number(cls, v):
-        if not v:
-            raise ValueError('Card number is required')
-        return v
-=======
     id: int | None = None
-    number: constr(min_length=13, max_length=19) # type: ignore
+    number: constr(min_length=13, max_length=19)
     expiration_date: date | None = datetime.now()
-    cardholder_name: constr(min_length=2, max_length=30) # type: ignore
-    cvv: conint(ge=100, le=999) # type: ignore
+    cardholder_name: constr(min_length=2, max_length=30)
+    cvv: conint(ge=100, le=999)
     wallet_id: int | None = None
     is_virtual: bool | None = Field(default=False)
->>>>>>> Stashed changes
 
-    @validator('exp_date')
-    def validate_exp_date(cls, v):
-        if not v:
-            raise ValueError('Expiration date is required')
-        if v < date.today():
-            raise ValueError('Expiration date must be in the future')
-        return v
+    @field_validator('number')
+    def validate_card_number(cls, value):    #card_number = "4242 4242 4242 4242"
 
-    @validator('cardholder_id')
-    def validate_cardholder_id(cls, v):
-        if not v:
-            raise ValueError('Cardholder ID is required')
-        return v
+        # Remove any spaces and convert to a list of integers
+        card_number = [int(digit) for digit in value.replace(" ", "")]
 
-    @validator('cvv')
-    def validate_cvv(cls, v):
-        if not v:
-            raise ValueError('CVV is required')
-        if len(str(v)) != 3:
-            raise ValueError('CVV must be a 3-digit number')
-        return v
-    
+        # Double every second digit from right to left
+        for i in range(len(card_number) - 2, -1, -2):
+            card_number[i] *= 2
+            if card_number[i] > 9:
+                card_number[i] -= 9
 
-class Categories(BaseModel):
-    id = int or None
-    title = str
-    transaction_id = int or None
+            # Sum all the digits
+        total_sum = sum(card_number)
 
-class Contact_list(BaseModel):
-    id = int or None
-    user_id = int or None
-    contact_id = int or None
-    sent = str
-    received = str
+        if not total_sum % 10 == 0:
+            raise ValueError('The card number is not valid')
+        return value
+
+    @classmethod
+    def from_query_result(cls, number: str, expiration_date: date,
+                          cardholder_name: str,cvv: int, wallet_id: int, is_virtual: bool):
+        return cls(
+                   number=number,
+                   expiration_date=expiration_date,
+                   cardholder_name=cardholder_name,
+                   cvv=cvv,
+                   wallet_id=wallet_id,
+                   is_virtual=is_virtual
+        )
 
 
 class Transactions(BaseModel):
-    id = int or None
-    is_reccuring = bool or None
-    ammount = float or None
-    status = str 
 
-class TransactionHistory(BaseModel):
-    user_id = int or None
-    transaction_id = int or None
-    reccuring_date = date or None
+    id: int | None = None
+    is_recurring: bool | None = Field(default=False)
+    amount: float
+    status: str = Field(default=Status.PENDING, description="Transaction status, e.g., 'pending', 'confirmed', 'denied'")
+    message: str | None = None
+    recurring_period: int | None = None
+    recurring_date: date | None = datetime.now()
+    transaction_date: date = datetime.now()
+    wallet_id: int | None = None
+    receiver_id: int | None = None
+    contact_list_id: int | None = None
+
+    @field_validator('is_recurring')
+    def validate_recurring_state(cls, value):
+        if value == 1:
+            return True
+        return False
+
+
+    @classmethod
+    def from_query_result(cls, id: int, is_recurring: bool, amount: float,
+                          status: str, message: str|None, transaction_date: date,
+                          recurring_date: date|None, wallet_id: int|None,
+                          receiver_id: int|None, contact_list_id: int = None):
+
+        return cls(id=id,
+                   is_recurring= cls.validate_recurring_state(is_recurring),
+                   amount=amount,
+                   status=status,
+                   message=message,
+                   transaction_date=transaction_date,
+                   recurring_date=recurring_date,
+                   wallet_id=wallet_id,
+                   receiver_id=receiver_id,
+                   contact_list_id=contact_list_id)
+
+class UserTransfer(BaseModel):
+
+    username: str | None = None
+    phone_number: str = None
+    amount: float = Field(gt=0.1)
+     # transaction_date = date.today()
+
+# class TransactionHistory(BaseModel):
+#
+#     user_id: int
+#     transaction_id: int | None = None
+#     recurring_date: date = datetime.now()  # !
+#
+#     @classmethod
+#     def from_query_result(cls, user_id: int, transaction_id: int, recurring_date:date):
+#         return cls(id=id,
+#                    user_id=user_id,
+#                    transaction_id=transaction_id,
+#                    recurring_date=recurring_date)
 
 
 class Wallet(BaseModel):
-<<<<<<< Updated upstream
-    id = int or None
-    amount = float or None
-=======
 
     id: int | None = None
     amount: float | None = None
@@ -226,10 +219,10 @@ class ViewContacts(BaseModel):
 
 
 class ExternalContacts(BaseModel):
-    id: int | None or None # type: ignore
-    contact_name: str | constr(min_length=2, max_length=100) = None # type: ignore
+    id: int | None or None
+    contact_name: str | constr(min_length=2, max_length=100) = None
     contact_email: EmailStr | None = None
-    iban: str | constr(min_length=15, max_length=34) = None # type: ignore
+    iban: str | constr(min_length=15, max_length=34) = None
 
     @classmethod
     def from_query_result(cls, id: int, contact_name: str = None, contact_email: EmailStr = None, iban: str = None):
@@ -259,4 +252,3 @@ class AccountDetails(BaseModel): #
 
 
 
->>>>>>> Stashed changes

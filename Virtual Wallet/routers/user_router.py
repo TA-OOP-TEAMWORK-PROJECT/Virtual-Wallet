@@ -1,12 +1,6 @@
-<<<<<<< Updated upstream
-from fastapi import APIRouter, Depends, HTTPException
-
-
-user_router = APIRouter(prefix='/users')
-=======
 from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from pydantic import constr
-from services.admin_service import send_registration_email
+
 from common.response import *
 from data_.models import UserUpdate, AccountDetails, ExternalContacts
 from services import user_service
@@ -27,8 +21,7 @@ def register(user_data: User):
         user_data.phone_number
     )
     if user is not None:
-        send_registration_email(user.email)
-        return {'message': f'User with username {user.username} has been created and is pending approval!'}
+        return {'message': f'User with username {user.username} has been created!'}
     else:
         return {'message': 'Failed to create user.'}, 500
 
@@ -76,7 +69,7 @@ async def view_contacts_list(current_user: Annotated[User, Depends(get_current_a
 
 
 @user_router.post("/contacts") #Could
-async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)], contact_request: constr(min_length=2, max_length=20)): # type: ignore
+async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)], contact_request: constr(min_length=2, max_length=20)):
     contact = user_service.add_user_to_contacts(current_user.id, contact_request)
     return contact
 
@@ -98,6 +91,3 @@ async def search_contacts(
 ):
     contacts = user_service.get_username_by(current_user.id, search, contact_list)
     return contacts
-
-
->>>>>>> Stashed changes
