@@ -1,28 +1,19 @@
-from typing import Annotated
-from fastapi import Depends, APIRouter
+from typing import Annotated, Dict
+from fastapi import Depends, APIRouter, HTTPException
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from jose import jwt
 
 from common.auth import get_current_active_user, SECRET_KEY
-from data_.models import User, UserTransfer, ExternalContacts
+from data_.models import User, UserTransfer, ExternalContacts, ConfirmationResponse
 from services.transaction_service import user_transfer, get_transactions, sort_transactions, get_transaction_response, \
-    change_status, new_transfer, bank_transfer, recurring_transactions
+    change_status, new_transfer, bank_transfer, recurring_transactions, process_transfer
 
 transaction_router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
 scheduler = BackgroundScheduler()
+pending_confirmations: Dict[str, Dict] = {}
 
-
-
-"""new_day = calculate_new_day()
-        new_hour = calculate_new_hour()
-        new_minute = calculate_new_minute()
-
-        # Update the CronTrigger with the new parameters
-        cron_trigger.day = new_day
-        cron_trigger.hour = new_hour
-        cron_trigger.minute = new_minute"""
 
 
 
@@ -38,10 +29,10 @@ async def startup_event():
 
 
 
-# @transaction_router.on_event("shutdown")
-# def shutdown_event():
-#     scheduler.shutdown()
-#
+@transaction_router.on_event("shutdown")
+def shutdown_event():
+    scheduler.shutdown()
+
 
 
 
@@ -61,13 +52,48 @@ def create_new_transaction(cur_transaction: UserTransfer,
     return  new_transfer(cur_transaction, search, current_user)
 
 
+
+
+
+
+
+
+
+
+
+
 @transaction_router.post("/new_transaction/bank_transfer")
 def create_bank_transfer(ext_user: ExternalContacts,
                          cur_transaction: UserTransfer,
                          current_user: Annotated[User, Depends(get_current_active_user)]):
 
-    return bank_transfer(ext_user, cur_transaction, current_user)
+    transfer_message = bank_transfer(ext_user, cur_transaction, current_user)
 
+    confirmation_id = len(pending_confirmations)
+    pending_confirmations[confirmation_id:int] = transfer_message
+
+    return {"confirmation_id": confirmation_id, "message": "Please confirm the transaction"}
+
+@transaction_router.post("/confirm-transfer")
+async def confirm_transfer(response: ConfirmationResponse):
+
+    if response.confirmation_id not in pending_confirmations:
+        raise HTTPException(status_code=404, detail="Confirmation ID not found")
+
+
+    pending_request = pending_confirmations[response.confirmation_id:int]
+
+    # Check if the user confirmed the action
+    if response.confirmed:
+        # Process the money transfer (mock implementation)
+        result = process_transfer(pending_request)   # изпращам заедно с информацията за трансфера за да бъде добавен към базата данни информацията е в модела при всички случай
+        # Remove the confirmed request from the pending list
+        del pending_confirmations[response.confirmation_id]
+        return {"status": "success", "message": "Money transfer completed"}
+    else:
+        # User did not confirm, do not proceed with the transfer
+        del pending_confirmations[response.confirmation_id]
+        return {"status": "cancelled", "message": "Money transfer cancelled"}
 
 @transaction_router.get("/")
 def view_transactions(current_user: Annotated[User, Depends(get_current_active_user)],

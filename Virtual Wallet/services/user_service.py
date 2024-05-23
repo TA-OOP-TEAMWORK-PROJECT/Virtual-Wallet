@@ -193,7 +193,7 @@ def get_username_by(user_id: int, search: str, contact_list: bool = False) -> di
     for row in user_data:
         results.append(row[0])
 
-    if contact_list: # moje da si vzeme user_id ot users napravo
+    if contact_list: # Търси в users по името на external user/ ако няма такъв external user Но има такъв user ШЕ ни даде резултат, а всъщност ни трябва externalIuser
         user_data = read_query('''
             SELECT users.username 
             FROM users
@@ -221,8 +221,7 @@ def get_username_by(user_id: int, search: str, contact_list: bool = False) -> di
             results.append(row[0])
 
     if not results:
-        raise CustomHTTPException(status_code=404, detail="No such user in the system, maybe check your contact list?",
-                                  existing_contact=results)
+        raise HTTPException(status_code=404, detail="No such user in the system, maybe check your contact list?")
 
     result_dict = {i + 1: result for i, result in enumerate(results)}
 

@@ -5,7 +5,7 @@ from fastapi import Response, HTTPException
 import logging
 
 from data_.database import insert_query, update_query, read_query
-from data_.models import UserTransfer, User, Transactions, RecurringTransaction, Wallet
+from data_.models import UserTransfer, User, Transactions, RecurringTransaction, Wallet, TransferConfirmation
 from services.card_service import find_wallet_id
 from services.user_service import find_by_username, get_user_wallet, find_by_id, get_username_by, add_external_contact, \
     get_contact_list
@@ -83,7 +83,7 @@ def bank_transfer(ext_user, cur_transaction, current_user):
         try:
             external_contact = get_username_by(current_user.id, search, contact_list=True)[1] # da se prekrysti che i tyrsi po neshto w bazata
             contact_list = get_contact_list(current_user, ext_user.contact_name)
-            a = 8
+
             return contact_list
 
 
@@ -99,31 +99,60 @@ def bank_transfer(ext_user, cur_transaction, current_user):
 
     wallet = get_user_wallet(current_user.id)
 
+
     if wallet.amount < cur_transaction.amount:
         raise HTTPException(status_code=400, detail='Insufficient funds')
 
+    new_wallet_amount: float
+    transaction_amount: float
+    is_recurring: bool|None = None  #ako ne e recurring
+    recurring_date: date|None = None
+    recurring_period: int|None = None
+    transaction_date: date
+    wallet_id: int
+    receiver_id: int                   # contact_list_id if is_external is TRue else receiver_id(user in the map)
+    is_external:bool
+
     wallet.amount -= cur_transaction.amount
 
-    cur_user_wallet = update_query('''
-                      UPDATE wallet
-                      SET amount = ?
-                      WHERE user_id = ?''',
-                      (wallet.amount, current_user.id))
+    transfer_message = TransferConfirmation(new_wallet_amount=wallet.amount,
+                                            transaction_amount=cur_transaction.amount,
+                                            transaction_date=date.today(),
+                                            wallet_id=wallet.id,
+                                            receiver_id=contact_list.id,
+                                            is_external=True)
 
-    if ext_user.is_recurring:
-        cur_user_insert = insert_query('''
-                                INSERT INTO transactions(amount, is_recurring, recurring_date, recurring_period, transaction_date, wallet_id, contact_list_id)
-                                VALUES(?,?,?,?,?,?,?)''',
-                                       (cur_transaction.amount,  ext_user.is_recurring, ext_user.recurring_date,
-                                        ext_user.recurring_period, date.today(), wallet.id, contact_list.id))
 
-    else:
+    return transfer_message
 
-        cur_user_insert = insert_query('''
-                        INSERT INTO transactions(amount, transaction_date, wallet_id, contact_list_id)
-                        VALUES(?,?,?,?)''',
-                        (cur_transaction.amount, date.today(), wallet.id, contact_list.id))
 
+def process_transfer()
+
+
+
+
+    #
+    #
+    # cur_user_wallet = update_query('''
+    #                   UPDATE wallet
+    #                   SET amount = ?
+    #                   WHERE user_id = ?''',
+    #                   (wallet.amount, current_user.id))
+    #
+    # if ext_user.is_recurring:
+    #     cur_user_insert = insert_query('''
+    #                             INSERT INTO transactions(amount, is_recurring, recurring_date, recurring_period, transaction_date, wallet_id, contact_list_id)
+    #                             VALUES(?,?,?,?,?,?,?)''',
+    #                                    (cur_transaction.amount,  ext_user.is_recurring, ext_user.recurring_date,
+    #                                     ext_user.recurring_period, date.today(), wallet.id, contact_list.id))
+    #
+    # else:
+    #
+    #     cur_user_insert = insert_query('''
+    #                     INSERT INTO transactions(amount, transaction_date, wallet_id, contact_list_id)
+    #                     VALUES(?,?,?,?)''',
+    #                     (cur_transaction.amount, date.today(), wallet.id, contact_list.id))
+    #
 
 def recurring_transactions(): # da izprashtam napravo v bank_transfer?
 
@@ -143,6 +172,7 @@ def recurring_transactions(): # da izprashtam napravo v bank_transfer?
 
         if wallet.amount >= cur_transaction.amount:  #>>>>>>!!!!
             wallet.amount -= cur_transaction.amount
+
 
             new_recurring_date = set_new_recurring_date(cur_transaction)
 
@@ -165,6 +195,8 @@ def recurring_transactions(): # da izprashtam napravo v bank_transfer?
             SET recurring_date = ?
             WHERE id = ?''',
             (cur_transaction.recurring_date, cur_transaction.id))
+
+
 
 
 

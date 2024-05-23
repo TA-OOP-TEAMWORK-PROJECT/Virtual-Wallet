@@ -226,6 +226,22 @@ class ViewContacts(BaseModel):
     phone_or_iban: str | None = None
 
 
+class TransferConfirmation(BaseModel):
+    new_wallet_amount: float
+    transaction_amount: float
+    is_recurring: bool|None = None  #ako ne e recurring
+    recurring_date: date|None = None
+    recurring_period: int|None = None
+    transaction_date: date
+    wallet_id: int
+    receiver_id: int                   # contact_list_id if is_external is TRue else receiver_id(user in the map)
+    is_external:bool
+
+class ConfirmationResponse(BaseModel):
+    confirmation_id: int
+    confirmed: bool
+
+
 class ExternalContacts(BaseModel):
     id: int | None = None
     is_recurring: int|None = None
@@ -254,8 +270,7 @@ class Categories(BaseModel):
                    )
 
 
-class AccountDetails(BaseModel): #
-    user: User
+class AccountDetails(BaseModel): #    user: User
     cards: list[Card]
     categories: list[Categories]
     contacts: list[ContactList]
