@@ -114,3 +114,18 @@ def status_update(transaction_id: int, new_status: str,
     result = change_status(transaction_id, new_status)
     return result
 
+
+@transaction_router.post("/recurring_transactions/new")
+def set_recurring_transaction(current_user: Annotated[User, Depends(get_current_active_user)]):
+    #може да си сетнеш като погледнеш всички транзакции до сега които не са в приловението и да станат recurring
+
+    result = create_recurring_transaction
+
+
+@transaction_router.get("/recurring_transactions")
+def create_recurring_transaction():
+    pass
+
+@transaction_router.put("/recurring_transactions/{transaction_id}/cancel")
+def create_recurring_transaction():
+    pass
