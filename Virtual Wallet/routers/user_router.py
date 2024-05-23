@@ -21,7 +21,7 @@ def register(user_data: User):
         user_data.phone_number
     )
     if user is not None:
-        return {'message': f'User with username {user.username} has been created!'}
+        return {'message': f'User with username {user.username} has been created and awaiting aprove!'}
     else:
         return {'message': 'Failed to create user.'}, 500
 
@@ -69,7 +69,7 @@ async def view_contacts_list(current_user: Annotated[User, Depends(get_current_a
 
 
 @user_router.post("/contacts") #Could
-async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)], contact_request: constr(min_length=2, max_length=20)):
+async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)], contact_request: constr(min_length=2, max_length=20)): # type: ignore
     contact = user_service.add_user_to_contacts(current_user.id, contact_request)
     return contact
 
