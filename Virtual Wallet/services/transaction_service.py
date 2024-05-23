@@ -31,32 +31,69 @@ def user_transfer(cur_transaction: UserTransfer, username: str, cur_user): #Ð’ Ð
     wallet.amount -= cur_transaction.amount
     receiver_user_wallet.amount += cur_transaction.amount
 
+    is_friend = check_contact_list(cur_user.id, receiver_user.id)
+
+
+    transfer_message = TransferConfirmation(new_wallet_amount=wallet.amount,
+                                            transaction_amount=cur_transaction.amount,
+                                            transaction_date=date.today(),
+                                            wallet_id=wallet.id,
+                                            receiver_wallet_id=receiver_user_wallet.id,
+                                            user_id=cur_user.id,
+                                            receiver_id=receiver_user.id,
+                                            is_external=False)
+
+    if is_friend:
+        transfer_to_user(transfer_message)
+
+    else:
+
+        return transfer_message
+
+def transfer_to_user(transfer_message):
+
     cur_user_insert = insert_query('''
     INSERT INTO transactions(amount, transaction_date, wallet_id, receiver_id)
     VALUES(?,?,?,?)''',
-    (cur_transaction.amount, date.today(), wallet.id, receiver_user.id))
+    (transfer_message.transaction_amount, date.today(),
+                transfer_message.wallet_id, transfer_message.receiver_id))
 
     receiver_user_insert = insert_query('''
     INSERT INTO transactions(amount, transaction_date, wallet_id, receiver_id)
     VALUES(?,?,?,?)''',
-    (cur_transaction.amount, date.today(), receiver_user_wallet.id, receiver_user.id))
+    (transfer_message.transaction_amount, date.today(),
+                transfer_message.receiver_wallet_id, transfer_message.receiver_id))
 
 
     cur_user_wallet = update_query('''
     UPDATE wallet
     SET amount = ?
     WHERE user_id = ?''',
-   (wallet.amount, cur_user.id))
+   (transfer_message.new_wallet_amount, transfer_message.user_id))
 
 
     receiver_user_wallet = update_query('''
     UPDATE wallet
     SET amount = ?
     WHERE user_id = ?''',
-   (receiver_user_wallet.amount, receiver_user.id))
+   (transfer_message.receiver_wallet_amount, transfer_message.receiver_id))
 
-    return Response(status_code=200, content=f'The amount of {cur_transaction.amount} was sent to {receiver_user.username}')
+    return Response(status_code=200, content=f'The amount of {transfer_message.transaction_amount} was sent.')
 
+def check_contact_list(sender_id, receiver_id):
+
+    data = read_query('''
+    SELECT CASE 
+    WHEN EXISTS (SELECT 1 FROM contact_list 
+    WHERE contact_id = 1 AND user_id = 1)
+	THEN TRUE 
+    ELSE FALSE 
+    END AS result''',
+    (sender_id, receiver_id))
+
+    if data[0][0] == 1:
+        return True
+    return False
 
 def new_transfer(cur_transaction, search, cur_user):
 
@@ -133,6 +170,10 @@ def process_transfer(pending_request):
                                 VALUES(?,?,?,?)''',
                                            (pending_request.transaction_amount, date.today(),
                                             pending_request.wallet_id, pending_request.receiver_id))
+
+    else:
+
+        transfer_to_user(pending_request)
 
 
 def recurring_transactions(): # da izprashtam napravo v bank_transfer?

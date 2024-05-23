@@ -46,11 +46,14 @@ def transfer_to_user(cur_transaction: UserTransfer, username: str,
 @transaction_router.post("/new_transaction/in_app")
 def create_new_transaction(cur_transaction: UserTransfer,
                            search: str,
-                           current_user: Annotated[User, Depends(get_current_active_user)],
-                           ):
+                           current_user: Annotated[User, Depends(get_current_active_user)]):
 
-    return  new_transfer(cur_transaction, search, current_user)
+    transfer_message = new_transfer(cur_transaction, search, current_user)
 
+    confirmation_id = len(pending_confirmations)
+    pending_confirmations[confirmation_id] = transfer_message
+
+    return {"confirmation_id": confirmation_id, "message": "Please confirm the transaction"}
 
 
 

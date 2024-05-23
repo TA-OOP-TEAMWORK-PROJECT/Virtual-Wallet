@@ -229,11 +229,11 @@ class ViewContacts(BaseModel):
 class TransferConfirmation(BaseModel):
     new_wallet_amount: float
     transaction_amount: float
-    is_recurring: bool|None = None  #ako ne e recurring
-    recurring_date: date|None = None
-    recurring_period: int|None = None
     transaction_date: date
     wallet_id: int
+    receiver_wallet_id: int|None = None
+    receiver_wallet_amount: float|None = None
+    user_id: int|None = None
     receiver_id: int                   # contact_list_id if is_external is TRue else receiver_id(user in the map)
     is_external:bool
 
