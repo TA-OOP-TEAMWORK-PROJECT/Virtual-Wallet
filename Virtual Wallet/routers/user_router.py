@@ -21,7 +21,7 @@ def register(user_data: User):
         user_data.phone_number
     )
     if user is not None:
-        return {'message': f'User with username {user.username} has been created and awaiting aprove!'}
+        return {'message': f'User with username {user.username} has been created and awaits approval!'}
     else:
         return {'message': 'Failed to create user.'}, 500
 
