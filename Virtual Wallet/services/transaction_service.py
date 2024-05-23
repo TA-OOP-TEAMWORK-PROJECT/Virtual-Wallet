@@ -103,15 +103,6 @@ def bank_transfer(ext_user, cur_transaction, current_user):
     if wallet.amount < cur_transaction.amount:
         raise HTTPException(status_code=400, detail='Insufficient funds')
 
-    new_wallet_amount: float
-    transaction_amount: float
-    is_recurring: bool|None = None  #ako ne e recurring
-    recurring_date: date|None = None
-    recurring_period: int|None = None
-    transaction_date: date
-    wallet_id: int
-    receiver_id: int                   # contact_list_id if is_external is TRue else receiver_id(user in the map)
-    is_external:bool
 
     wallet.amount -= cur_transaction.amount
 

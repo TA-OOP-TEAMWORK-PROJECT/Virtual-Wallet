@@ -84,12 +84,12 @@ async def confirm_transfer(confirmation_id: int,
         result = process_transfer(pending_request)   # изпращам заедно с информацията за трансфера за да бъде добавен към базата данни информацията е в модела при всички случай
         # Remove the confirmed request from the pending list
         del pending_confirmations[confirmation_id]
-        # return {"status": "success", "message": "Money transfer completed"}  Съобщение след като се извърши транзакцията
+        return f"You have send the amount of {pending_request.transaction_amount}"
 
     else:
         # User did not confirm, do not proceed with the transfer
         del pending_confirmations[confirmation_id]
-        return 'The thansfer was denied!'
+        return 'The transfer was denied!'
 
 @transaction_router.get("/")
 def view_transactions(current_user: Annotated[User, Depends(get_current_active_user)],
