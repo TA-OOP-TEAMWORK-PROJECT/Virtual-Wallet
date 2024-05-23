@@ -126,33 +126,23 @@ def bank_transfer(ext_user, cur_transaction, current_user):
     return transfer_message
 
 
-def process_transfer()
+def process_transfer(pending_request):
 
 
+    if pending_request.is_external:
+        cur_user_wallet = update_query('''
+                              UPDATE wallet
+                              SET amount = ?
+                              WHERE id = ?''',
+                                       (pending_request.new_wallet_amount, pending_request.wallet_id))
 
 
-    #
-    #
-    # cur_user_wallet = update_query('''
-    #                   UPDATE wallet
-    #                   SET amount = ?
-    #                   WHERE user_id = ?''',
-    #                   (wallet.amount, current_user.id))
-    #
-    # if ext_user.is_recurring:
-    #     cur_user_insert = insert_query('''
-    #                             INSERT INTO transactions(amount, is_recurring, recurring_date, recurring_period, transaction_date, wallet_id, contact_list_id)
-    #                             VALUES(?,?,?,?,?,?,?)''',
-    #                                    (cur_transaction.amount,  ext_user.is_recurring, ext_user.recurring_date,
-    #                                     ext_user.recurring_period, date.today(), wallet.id, contact_list.id))
-    #
-    # else:
-    #
-    #     cur_user_insert = insert_query('''
-    #                     INSERT INTO transactions(amount, transaction_date, wallet_id, contact_list_id)
-    #                     VALUES(?,?,?,?)''',
-    #                     (cur_transaction.amount, date.today(), wallet.id, contact_list.id))
-    #
+        cur_user_insert = insert_query('''
+                                INSERT INTO transactions(amount, transaction_date, wallet_id, contact_list_id)
+                                VALUES(?,?,?,?)''',
+                                           (pending_request.transaction_amount, date.today(),
+                                            pending_request.wallet_id, pending_request.receiver_id))
+
 
 def recurring_transactions(): # da izprashtam napravo v bank_transfer?
 

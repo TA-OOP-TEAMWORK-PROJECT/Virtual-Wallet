@@ -54,14 +54,6 @@ def create_new_transaction(cur_transaction: UserTransfer,
 
 
 
-
-
-
-
-
-
-
-
 @transaction_router.post("/new_transaction/bank_transfer")
 def create_bank_transfer(ext_user: ExternalContacts,
                          cur_transaction: UserTransfer,
@@ -70,30 +62,34 @@ def create_bank_transfer(ext_user: ExternalContacts,
     transfer_message = bank_transfer(ext_user, cur_transaction, current_user)
 
     confirmation_id = len(pending_confirmations)
-    pending_confirmations[confirmation_id:int] = transfer_message
+    pending_confirmations[confirmation_id] = transfer_message
 
     return {"confirmation_id": confirmation_id, "message": "Please confirm the transaction"}
 
-@transaction_router.post("/confirm-transfer")
-async def confirm_transfer(response: ConfirmationResponse):
 
-    if response.confirmation_id not in pending_confirmations:
+@transaction_router.post("/confirm-transfer/{confirmation_id}")
+async def confirm_transfer(confirmation_id: int,
+                           response: ConfirmationResponse):
+
+
+    if confirmation_id not in pending_confirmations:
         raise HTTPException(status_code=404, detail="Confirmation ID not found")
 
 
-    pending_request = pending_confirmations[response.confirmation_id:int]
+    pending_request = pending_confirmations[confirmation_id]
 
     # Check if the user confirmed the action
-    if response.confirmed:
+    if response.is_confirmed:
         # Process the money transfer (mock implementation)
         result = process_transfer(pending_request)   # изпращам заедно с информацията за трансфера за да бъде добавен към базата данни информацията е в модела при всички случай
         # Remove the confirmed request from the pending list
-        del pending_confirmations[response.confirmation_id]
-        return {"status": "success", "message": "Money transfer completed"}
+        del pending_confirmations[confirmation_id]
+        # return {"status": "success", "message": "Money transfer completed"}  Съобщение след като се извърши транзакцията
+
     else:
         # User did not confirm, do not proceed with the transfer
-        del pending_confirmations[response.confirmation_id]
-        return {"status": "cancelled", "message": "Money transfer cancelled"}
+        del pending_confirmations[confirmation_id]
+        return 'The thansfer was denied!'
 
 @transaction_router.get("/")
 def view_transactions(current_user: Annotated[User, Depends(get_current_active_user)],

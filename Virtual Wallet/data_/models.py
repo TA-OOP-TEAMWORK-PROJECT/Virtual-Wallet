@@ -237,9 +237,10 @@ class TransferConfirmation(BaseModel):
     receiver_id: int                   # contact_list_id if is_external is TRue else receiver_id(user in the map)
     is_external:bool
 
+
 class ConfirmationResponse(BaseModel):
-    confirmation_id: int
-    confirmed: bool
+
+    is_confirmed: bool
 
 
 class ExternalContacts(BaseModel):
