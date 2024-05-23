@@ -1,7 +1,7 @@
 
 from pydantic import BaseModel, EmailStr, Field, constr, conint, field_validator
 from datetime import date, datetime
-import numpy as np
+
 
 
 
@@ -84,10 +84,10 @@ class TokenData(BaseModel):
 class Card(BaseModel):
 
     id: int | None = None
-    number: constr(min_length=13, max_length=19)
+    number: constr(min_length=13, max_length=19) # type: ignore
     expiration_date: date | None = datetime.now()
-    cardholder_name: constr(min_length=2, max_length=30)
-    cvv: conint(ge=100, le=999)
+    cardholder_name: constr(min_length=2, max_length=30) # type: ignore
+    cvv: conint(ge=100, le=999) # type: ignore
     wallet_id: int | None = None
     is_virtual: bool | None = Field(default=False)
 
@@ -219,10 +219,10 @@ class ViewContacts(BaseModel):
 
 
 class ExternalContacts(BaseModel):
-    id: int | None or None
-    contact_name: str | constr(min_length=2, max_length=100) = None
+    id: int | None = None
+    contact_name: str | constr(min_length=2, max_length=100) = None # type: ignore
     contact_email: EmailStr | None = None
-    iban: str | constr(min_length=15, max_length=34) = None
+    iban: str | constr(min_length=15, max_length=34) = None # type: ignore
 
     @classmethod
     def from_query_result(cls, id: int, contact_name: str = None, contact_email: EmailStr = None, iban: str = None):
