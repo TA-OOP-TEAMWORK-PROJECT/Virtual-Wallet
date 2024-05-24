@@ -18,13 +18,18 @@ tags_metadata = [
         "description": "Login into your account and forget about troubles!",
     },
     {
-        "name": "Cards",
+        "name": "Wallet",
         "description": "Your money are either safe or gone with us.",
     },
 
     {
         "name": "Transactions",
         "description": "Place where you could easily waste your life savings.",
+    },
+
+    {
+        "name": "Categories",
+        "description": "Use your imagination to define your in-app world.",
     }
 ]
 

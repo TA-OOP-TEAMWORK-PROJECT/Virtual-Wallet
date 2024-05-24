@@ -88,10 +88,12 @@ def update_user_profile(username: str, user_update: UserUpdate):
 
 def get_user_account_details(user_id: int) -> AccountDetails:  #  Дали можем да направим търсене само веднъж, да създадем клас и така да върнем инфото
     user = find_by_id(user_id)
-    cards = get_user_cards(user_id)
+    wallet = get_user_wallet(user_id)
+    wallet_id = wallet.id
+    cards = get_user_cards(wallet_id)
     categories = get_user_categories(user_id)
     contacts = get_user_contacts(user_id)
-    transactions = get_user_transactions(user_id)
+    transactions = get_user_transactions(wallet_id)
 
     return AccountDetails(
         user=user,
@@ -114,7 +116,7 @@ def find_by_id(user_id: int) -> User: #
 
 def get_user_cards(wallet_id: int) -> list[Card]:
     data = read_query(
-        '''SELECT id, number, exp_date, cardholder_name, cvv, is_virtual
+        '''SELECT id, number, exp_date, cardholder_name, cvv, wallet_id, is_virtual
                   FROM cards WHERE wallet_id = ?''',
         (wallet_id,)
     )
@@ -135,7 +137,7 @@ def get_user_wallet(user_id: int):
 
 def get_user_categories(transaction_id: int) -> list[Categories]:
     data = read_query(
-        '''SELECT id, title FROM categories WHERE transaction_id = ?''',
+        '''SELECT id, title, user_id FROM categories WHERE user_id = ?''',
         (transaction_id,)
     )
     return [Categories.from_query_result(*row) for row in data]
@@ -151,7 +153,8 @@ def get_user_contacts(user_id: int) -> list[ContactList]:
 
 def get_user_transactions(wallet_id: int) -> list[Transactions]:
     data = read_query(
-        '''SELECT id, is_recurring, amount, status, message, recurring_period, recurring_date, transaction_date, receiver_id
+        '''SELECT id, is_recurring, amount, status, message, recurring_period, 
+        recurring_date, transaction_date, receiver_id, category_id
                   FROM transactions WHERE wallet_id = ?''',
         (wallet_id,)
     )
@@ -284,7 +287,7 @@ def remove_contact(user_id: int, removed_user_id: int) -> bool:
     ''', (user_id, removed_user_id))
 
     external_contact = read_query('''
-        SELECT cl.id
+        SELECT cl.id, cl.external_user_id
         FROM contact_list cl
         WHERE cl.user_id = ? AND cl.external_user_id = ?
     ''', (user_id, removed_user_id))
@@ -293,7 +296,26 @@ def remove_contact(user_id: int, removed_user_id: int) -> bool:
     if not contact_list:
         raise HTTPException(status_code=404, detail="Contact not found in your contact list.")
 
-    update_query('''DELETE FROM contact_list WHERE id = ?''', (contact_list[0][0],))
+    contact_id = contact_list[0][0]
+    external_user_id = contact_list[0][1] if external_contact else None
+
+    update_query('''DELETE FROM contact_list WHERE id = ?''', (contact_id,))
+
+    if external_user_id:
+        update_query('''DELETE FROM external_user WHERE id = ?''', (external_user_id,))
 
     return True
 
+
+def get_contact_list(current_user, contact_name):
+    data = read_query('''
+    SELECT contact_list.id, user_id, external_user_id
+    FROM contact_list
+    JOIN external_user
+    ON external_user.id = contact_list.external_user_id
+    WHERE contact_list.user_id = ?
+    AND external_user.contact_name = ?''',
+                      (current_user.id, contact_name))
+
+    id, user_id, external_user_id = data[0]
+    return ContactList(id=id, user_id=user_id, external_user_id=external_user_id)
