@@ -7,7 +7,7 @@ from data_.models import User
 from services.admin_service import send_registration_email
 
 def create(username: str, password: str, first_name: str,
-           last_name: str, email: str, phone_number: str) -> User | None:
+           last_name: str, email: str, phone_number: str) -> User | None: ##Updated
 
     existing_user = read_query('SELECT id FROM users WHERE username = ?', (username,))
     if existing_user:
@@ -19,6 +19,12 @@ def create(username: str, password: str, first_name: str,
         '''INSERT INTO users(username, first_name, last_name, 
                 email, phone_number, hashed_password) VALUES (?,?,?,?,?,?)''',
         (username, first_name, last_name, email, phone_number, hash_password))
+
+    insert_query(
+        '''INSERT INTO wallet (user_id, amount) VALUES (?, ?)''',
+        (generated_id, 0.0)
+    )
+
     new_user = User(id=generated_id, username=username, password=password, first_name=first_name, last_name=last_name,
                 email=email, phone_number=phone_number, hashed_password=hash_password)
     send_registration_email(new_user.email)
