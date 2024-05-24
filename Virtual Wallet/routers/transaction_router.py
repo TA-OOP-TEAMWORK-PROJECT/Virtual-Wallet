@@ -5,7 +5,7 @@ from apscheduler.triggers.cron import CronTrigger
 from jose import jwt
 
 from common.auth import get_current_active_user, SECRET_KEY
-from data_.models import User, UserTransfer, ExternalContacts, ConfirmationResponse
+from data_.models import User, UserTransfer, ExternalContacts, ConfirmationResponse, ExternalTransfer
 from services.transaction_service import user_transfer, get_transactions, sort_transactions, get_transaction_response, \
     change_status, new_transfer, bank_transfer, recurring_transactions, process_transfer
 
@@ -58,7 +58,7 @@ def create_new_transaction(cur_transaction: UserTransfer,
 
 
 @transaction_router.post("/new_transaction/bank_transfer")
-def create_bank_transfer(ext_user: ExternalContacts,
+def create_bank_transfer(ext_user: ExternalTransfer,
                          cur_transaction: UserTransfer,
                          current_user: Annotated[User, Depends(get_current_active_user)]):
 

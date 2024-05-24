@@ -245,16 +245,26 @@ class ConfirmationResponse(BaseModel):
 
 class ExternalContacts(BaseModel):
     id: int | None = None
+    contact_name: str | constr(min_length=2, max_length=100) = None
+    contact_email: EmailStr | None = None
+    iban: str | constr(min_length=15, max_length=34) = None
+
+    @classmethod
+    def from_query_result(cls, id: int, contact_name: str = None, contact_email: EmailStr = None, iban: str = None):
+        return cls(id=id, contact_name=contact_name, contact_email=contact_email, iban=iban)
+
+
+
+class ExternalTransfer(ExternalContacts, BaseModel):
     is_recurring: int|None = None
     recurring_date: date|None = None
     recurring_period: int|None = None
-    contact_name: str | constr(min_length=2, max_length=100)
-    contact_email: EmailStr | None = None
     iban: str | constr(min_length=15, max_length=34)
 
     @classmethod
     def from_query_result(cls, id: int, contact_name: str = None, contact_email: EmailStr = None, iban: str = None):
         return cls(id=id, contact_name=contact_name, contact_email=contact_email, iban=iban)
+
 
 
 class Categories(BaseModel):

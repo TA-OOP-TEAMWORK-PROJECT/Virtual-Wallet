@@ -271,7 +271,7 @@ def add_user_to_contacts(user_id: int, contact_username: str) -> ContactList:
 
 
 
-def add_external_contact(user_id: int, contact_data: ExternalContacts) -> ContactList:
+def add_external_contact(user_id: int, contact_data: ExternalTransfer) -> ContactList:
     existing_external_user = read_query(
         '''SELECT id FROM contact_list WHERE user_id = ? AND external_user_id = ?''',
         (user_id, contact_data.iban))
