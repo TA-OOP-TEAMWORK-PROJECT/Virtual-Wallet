@@ -3,7 +3,7 @@ from mariadb import connect
 from mariadb.connections import Connection
 from common.config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME
 
-def _get_connection() -> Connection:
+def _get_connection() -> Connection: #
     return connect(
         user=DB_USER,
         password=DB_PASSWORD,
