@@ -28,7 +28,7 @@ class User(BaseModel):
     phone_number: str = constr(min_length=8, max_length=10)   # UNIQUE
     role: str = Field(default=Role.USER, description="User role, e.g., 'admin', 'user'")
     hashed_password: str | None = None
-    is_blocked: bool = Field(default=False)
+    is_blocked: bool = Field(default=True)
     disabled: bool | None = None
 
     @classmethod

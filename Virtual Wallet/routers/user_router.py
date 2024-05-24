@@ -10,7 +10,7 @@ from services.user_service import get_user_response
 user_router = APIRouter(prefix='/users', tags=["Users"])
 
 
-@user_router.post('/register') #
+@user_router.post('/register')
 def register(user_data: User):
     user = user_service.create(
         user_data.username,
@@ -21,7 +21,7 @@ def register(user_data: User):
         user_data.phone_number
     )
     if user is not None:
-        return {'message': f'User with username {user.username} has been created and awaiting aprove!'}
+        return {'message': f'User with username {user.username} has been created and awaits approval!'}
     else:
         return {'message': 'Failed to create user.'}, 500
 
@@ -68,13 +68,13 @@ async def view_contacts_list(current_user: Annotated[User, Depends(get_current_a
     return contacts
 
 
-@user_router.post("/contacts") #Could
-async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)], contact_request: constr(min_length=2, max_length=20)): # type: ignore
+@user_router.post("/contacts/add") #Could
+async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)], contact_request: constr(min_length=2, max_length=20)):
     contact = user_service.add_user_to_contacts(current_user.id, contact_request)
     return contact
 
 
-@user_router.post("/contacts/external") #proeni imeto za da se izbegne greshka s rekursuq
+@user_router.post("/contacts/add/external")
 async def add_external_contact(
     current_user: Annotated[User, Depends(get_current_active_user)],
     contact_data: ExternalContacts
@@ -91,3 +91,15 @@ async def search_contacts(
 ):
     contacts = user_service.get_username_by(current_user.id, search, contact_list)
     return contacts
+
+
+@user_router.delete("/contacts/remove")
+async def remove_contact(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    removed_user_id: int
+):
+    success = user_service.remove_contact(current_user.id, removed_user_id)
+    if success:
+        return "Contact removed successfully."
+    else:
+        raise HTTPException(status_code=500, detail="Failed to remove contact.")

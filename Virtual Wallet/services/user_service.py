@@ -1,13 +1,13 @@
 from common import auth
-from common.response import NotFound, CustomHTTPException
+from common.response import NotFound
 from data_.models import *
 from data_.database import read_query, insert_query, update_query
 from fastapi import HTTPException
 from data_.models import User
 from services.admin_service import send_registration_email
 
-def create(username: str, password: str, first_name: str, # da mu se syzdawa wallet na usera
-           last_name: str, email: str, phone_number: str) -> User | None:
+def create(username: str, password: str, first_name: str,
+           last_name: str, email: str, phone_number: str) -> User | None: ##Updated
 
     existing_user = read_query('SELECT id FROM users WHERE username = ?', (username,))
     if existing_user:
@@ -19,6 +19,12 @@ def create(username: str, password: str, first_name: str, # da mu se syzdawa wal
         '''INSERT INTO users(username, first_name, last_name, 
                 email, phone_number, hashed_password) VALUES (?,?,?,?,?,?)''',
         (username, first_name, last_name, email, phone_number, hash_password))
+
+    insert_query(
+        '''INSERT INTO wallet (user_id, amount) VALUES (?, ?)''',
+        (generated_id, 0.0)
+    )
+
     new_user = User(id=generated_id, username=username, password=password, first_name=first_name, last_name=last_name,
                 email=email, phone_number=phone_number, hashed_password=hash_password)
     send_registration_email(new_user.email)
@@ -96,7 +102,7 @@ def get_user_account_details(user_id: int) -> AccountDetails:  #  Дали мо�
     )
 
 
-def find_by_id(user_id: int) -> User:
+def find_by_id(user_id: int) -> User: #
     data = read_query(
         '''SELECT id, username, first_name, last_name,
                   email, phone_number, role, hashed_password, is_blocked
@@ -104,34 +110,6 @@ def find_by_id(user_id: int) -> User:
         (user_id,)
     )
     return next((User.from_query_result(*row) for row in data), None)
-
-# def get_external_user_by_name(name:str):
-#
-#     data = read_query('''
-#     SELECT id, contact_name, contact_email, iban
-#     FROM external_user
-#     WHERE contact_name = ?''',
-#     (name, ))
-#
-#     id, contact_name, contact_email, iban = data[0]
-#     return ExternalContacts(id=id, contact_name=contact_name, contact_email=contact_email, iban=iban)
-
-
-def get_contact_list(current_user, contact_name):
-
-    data = read_query('''
-    SELECT contact_list.id, user_id, external_user_id
-    FROM contact_list
-    JOIN external_user
-    ON external_user.id = contact_list.external_user_id
-    WHERE contact_list.user_id = ?
-    AND external_user.contact_name = ?''',
-                      (current_user.id, contact_name))
-
-    id, user_id, external_user_id = data[0]
-    return ContactList(id=id, user_id=user_id, external_user_id=external_user_id)
-
-
 
 
 def get_user_cards(wallet_id: int) -> list[Card]:
@@ -180,7 +158,7 @@ def get_user_transactions(wallet_id: int) -> list[Transactions]:
     return [Transactions.from_query_result(*row) for row in data]
 
 
-def get_username_by(user_id: int, search: str, contact_list: bool = False) -> dict: #не го търси в contact list а в цялото приложение
+def get_username_by(user_id: int, search: str, contact_list: bool = False) -> dict:
     results = []
 
     user_data = read_query('''
@@ -194,12 +172,12 @@ def get_username_by(user_id: int, search: str, contact_list: bool = False) -> di
     for row in user_data:
         results.append(row[0])
 
-    if contact_list: # Търси в users по името на external user/ ако няма такъв external user Но има такъв user ШЕ ни даде резултат, а всъщност ни трябва externalIuser
+    if contact_list:
         user_data = read_query('''
             SELECT users.username 
             FROM users
             JOIN contact_list ON users.id = contact_list.contact_id
-            WHERE contact_list.user_id = ? 
+            WHERE contact_list.user_id = ?
             AND (users.email LIKE ?
             OR users.username LIKE ?
             OR users.phone_number LIKE ?)''',
@@ -272,7 +250,7 @@ def add_user_to_contacts(user_id: int, contact_username: str) -> ContactList:
 
 
 
-def add_external_contact(user_id: int, contact_data: ExternalTransfer) -> ContactList:
+def add_external_contact(user_id: int, contact_data: ExternalContacts) -> ContactList:
     existing_external_user = read_query(
         '''SELECT id FROM contact_list WHERE user_id = ? AND external_user_id = ?''',
         (user_id, contact_data.iban))
@@ -289,7 +267,6 @@ def add_external_contact(user_id: int, contact_data: ExternalTransfer) -> Contac
         (user_id, external_user_id))
 
     if existing_contact:
-
         raise HTTPException(status_code=400, detail="External contact already exists")
 
     contact_id = insert_query(
@@ -298,4 +275,25 @@ def add_external_contact(user_id: int, contact_data: ExternalTransfer) -> Contac
 
     return ContactList(id=contact_id, user_id=user_id, external_user_id=external_user_id)
 
+
+def remove_contact(user_id: int, removed_user_id: int) -> bool:
+    internal_contact = read_query('''
+        SELECT cl.id
+        FROM contact_list cl
+        WHERE cl.user_id = ? AND cl.contact_id = ?
+    ''', (user_id, removed_user_id))
+
+    external_contact = read_query('''
+        SELECT cl.id
+        FROM contact_list cl
+        WHERE cl.user_id = ? AND cl.external_user_id = ?
+    ''', (user_id, removed_user_id))
+
+    contact_list = internal_contact + external_contact
+    if not contact_list:
+        raise HTTPException(status_code=404, detail="Contact not found in your contact list.")
+
+    update_query('''DELETE FROM contact_list WHERE id = ?''', (contact_list[0][0],))
+
+    return True
 
