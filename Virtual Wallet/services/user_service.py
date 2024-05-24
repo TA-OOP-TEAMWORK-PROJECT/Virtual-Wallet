@@ -4,7 +4,7 @@ from data_.models import *
 from data_.database import read_query, insert_query, update_query
 from fastapi import HTTPException
 from data_.models import User
-
+from services.admin_service import send_registration_email
 
 def create(username: str, password: str, first_name: str, # da mu se syzdawa wallet na usera
            last_name: str, email: str, phone_number: str) -> User | None:
@@ -19,9 +19,10 @@ def create(username: str, password: str, first_name: str, # da mu se syzdawa wal
         '''INSERT INTO users(username, first_name, last_name, 
                 email, phone_number, hashed_password) VALUES (?,?,?,?,?,?)''',
         (username, first_name, last_name, email, phone_number, hash_password))
-
-    return User(id=generated_id, username=username, password=password, first_name=first_name, last_name=last_name,
+    new_user = User(id=generated_id, username=username, password=password, first_name=first_name, last_name=last_name,
                 email=email, phone_number=phone_number, hashed_password=hash_password)
+    send_registration_email(new_user.email)
+    return new_user
 
 
 def find_by_username(username: str) -> User | None:

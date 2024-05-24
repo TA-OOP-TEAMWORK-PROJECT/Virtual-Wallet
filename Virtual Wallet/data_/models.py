@@ -1,6 +1,9 @@
 
 from pydantic import BaseModel, EmailStr, Field, constr, conint, field_validator
 from datetime import date, datetime
+import numpy as np
+
+
 
 class Role:
 
@@ -187,7 +190,20 @@ class UserTransfer(BaseModel):
     username: str | None = None
     phone_number: str|None = None
     amount: float = Field(gt=0.1)
+     # transaction_date = date.today()
 
+# class TransactionHistory(BaseModel):
+#
+#     user_id: int
+#     transaction_id: int | None = None
+#     recurring_date: date = datetime.now()  # !
+#
+#     @classmethod
+#     def from_query_result(cls, user_id: int, transaction_id: int, recurring_date:date):
+#         return cls(id=id,
+#                    user_id=user_id,
+#                    transaction_id=transaction_id,
+#                    recurring_date=recurring_date)
 
 
 class Wallet(BaseModel):
@@ -244,7 +260,7 @@ class ConfirmationResponse(BaseModel):
 
 
 class ExternalContacts(BaseModel):
-    id: int | None = None
+    id: int | None or None
     contact_name: str | constr(min_length=2, max_length=100) = None
     contact_email: EmailStr | None = None
     iban: str | constr(min_length=15, max_length=34) = None
@@ -281,9 +297,12 @@ class Categories(BaseModel):
                    )
 
 
-class AccountDetails(BaseModel): #    user: User
+class AccountDetails(BaseModel): #
+    user: User
     cards: list[Card]
     categories: list[Categories]
     contacts: list[ContactList]
     transactions: list[Transactions]
+
+
 
