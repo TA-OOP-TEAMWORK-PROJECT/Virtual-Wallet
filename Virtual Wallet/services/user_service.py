@@ -153,7 +153,9 @@ def get_user_wallet(user_id: int):
 
 def get_user_categories(transaction_id: int) -> list[Categories]:
     data = read_query(
-        '''SELECT id, title FROM categories WHERE transaction_id = ?''',
+        '''SELECT id, title 
+        FROM categories 
+        WHERE transaction_id = ?''',
         (transaction_id,)
     )
     return [Categories.from_query_result(*row) for row in data]

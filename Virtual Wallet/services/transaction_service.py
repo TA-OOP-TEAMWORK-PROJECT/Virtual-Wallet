@@ -1,14 +1,11 @@
 from datetime import date, datetime, timedelta
 from typing import Annotated
-
 from fastapi import Response, HTTPException
-
-
 from data_.database import insert_query, update_query, read_query
 from data_.models import UserTransfer, User, Transactions, RecurringTransaction, Wallet, TransferConfirmation
 from services.card_service import find_wallet_id
-from services.user_service import find_by_username, get_user_wallet, find_by_id, get_username_by, add_external_contact, \
-    get_contact_list
+from services.user_service import find_by_username, get_user_wallet, find_by_id
+from services.contact_service import get_username_by, add_external_contact, get_contact_list
 
 
 def user_transfer(cur_transaction: UserTransfer, username: str, cur_user): #В бодито има само сума

@@ -1,12 +1,34 @@
+from starlette import status
+from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from pydantic import constr
+from fastapi.security import OAuth2PasswordRequestForm
 from common.response import *
-from data_.models import UserUpdate, AccountDetails, ExternalContacts
+from data_.models import UserUpdate, AccountDetails, Token
 from services import user_service
 from common.auth import *
 from services.user_service import get_user_response
-import requests
+from common.auth import (ACCESS_TOKEN_EXPIRE_MINUTES, authenticate_user,
+                          create_access_token, get_current_active_user)
+
+from common.auth import current_user
+
 user_router = APIRouter(prefix='/users', tags=["Users"])
+
+
+@user_router.get("/")
+async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]):
+
+    return get_user_response(current_user)
+
+
+@user_router.get("/details", response_model=AccountDetails)
+async def get_account_details(current_user: Annotated[User, Depends(get_current_active_user)]):
+    account_details = user_service.get_user_account_details(current_user.id)
+    if not account_details:
+        return NotFound(status_code=404, content="Account details not found")
+
+    return account_details
 
 
 @user_router.post('/register')
@@ -25,13 +47,26 @@ def register(user_data: User):
         return {'message': 'Failed to create user.'}, 500
 
 
-@user_router.get("/me")
-async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]):
+@user_router.post("/login", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
 
-    return get_user_response(current_user)
+    user_credentials = current_user(form_data.username)
+
+    user = authenticate_user(user_credentials, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")
 
 
-@user_router.put("/me")
+@user_router.put("/update")
 async def update_user_profile(
     current_user: Annotated[User, Depends(get_current_active_user)],
     user_update: UserUpdate = Body(...)
@@ -50,55 +85,3 @@ async def update_user_profile(
             detail="Failed to update user profile."
         )
     return {"message": update_message}
-
-
-@user_router.get("/me/details", response_model=AccountDetails)
-async def get_account_details(current_user: Annotated[User, Depends(get_current_active_user)]):
-    account_details = user_service.get_user_account_details(current_user.id)
-    if not account_details:
-        return NotFound(status_code=404, content="Account details not found")
-
-    return account_details
-
-
-@user_router.get("/contacts") #Could
-async def view_contacts_list(current_user: Annotated[User, Depends(get_current_active_user)]):
-    contacts = user_service.view_user_contacts(current_user.id)
-    return contacts
-
-
-@user_router.post("/contacts/add") #Could
-async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)], contact_request: constr(min_length=2, max_length=20)): # type: ignore
-    contact = user_service.add_user_to_contacts(current_user.id, contact_request)
-    return contact
-
-
-@user_router.post("/contacts/add/external")
-async def add_external_contact(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    contact_data: ExternalContacts
-):
-    contact = user_service.add_external_contact(current_user.id, contact_data)
-    return contact
-
-
-@user_router.get("/contacts/search")
-async def search_contacts(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    search: str,
-    contact_list: bool = Query(False)
-):
-    contacts = user_service.get_username_by(current_user.id, search, contact_list)
-    return contacts
-
-
-@user_router.delete("/contacts/remove")
-async def remove_contact(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    removed_user_id: int
-):
-    success = user_service.remove_contact(current_user.id, removed_user_id)
-    if success:
-        return "Contact removed successfully."
-    else:
-        raise HTTPException(status_code=500, detail="Failed to remove contact.")
