@@ -32,6 +32,23 @@ def shutdown_event():
     scheduler.shutdown()
 
 
+@transaction_router.get("/")
+def view_transactions(current_user: Annotated[User, Depends(get_current_active_user)],
+            sort:  str | None = None,
+            sort_by: str | None = None,
+            search: str | None = None):
+
+    result = get_transactions(current_user, search)
+
+    if sort and (sort == 'asc' or sort == 'desc'):
+        result = sort_transactions(result, sort_by, is_reverse=sort == 'desc')
+
+    return get_transaction_response(result)
+
+
+@transaction_router.get("/recurring")
+def create_recurring_transaction():
+    pass
 
 
 @transaction_router.post("/{username}")
@@ -92,26 +109,6 @@ async def confirm_transfer(confirmation_id: int,
         del pending_confirmations[confirmation_id]
         return 'The transfer was denied!'
 
-@transaction_router.get("/")
-def view_transactions(current_user: Annotated[User, Depends(get_current_active_user)],
-            sort:  str | None = None,
-            sort_by: str | None = None,
-            search: str | None = None):
-
-    result = get_transactions(current_user, search)
-
-    if sort and (sort == 'asc' or sort == 'desc'):
-        result = sort_transactions(result, sort_by, is_reverse=sort == 'desc')
-
-    return get_transaction_response(result)
-
-@transaction_router.put("/{transaction_id}/amount/status")
-def status_update(transaction_id: int, new_status: str,
-                  current_user: Annotated[User, Depends(get_current_active_user)]):
-
-    result = change_status(transaction_id, new_status)
-    return result
-
 
 @transaction_router.post("/recurring/new")
 def set_recurring_transaction(current_user: Annotated[User, Depends(get_current_active_user)]):
@@ -120,9 +117,13 @@ def set_recurring_transaction(current_user: Annotated[User, Depends(get_current_
     result = create_recurring_transaction
 
 
-@transaction_router.get("/recurring")
-def create_recurring_transaction():
-    pass
+@transaction_router.put("/{transaction_id}/amount/status")
+def status_update(transaction_id: int, new_status: str,
+                  current_user: Annotated[User, Depends(get_current_active_user)]):
+
+    result = change_status(transaction_id, new_status)
+    return result
+
 
 @transaction_router.put("/recurring/{transaction_id}/cancel")
 def create_recurring_transaction():

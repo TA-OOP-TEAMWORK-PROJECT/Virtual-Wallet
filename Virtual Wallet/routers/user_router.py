@@ -16,6 +16,21 @@ from common.auth import current_user
 user_router = APIRouter(prefix='/users', tags=["Users"])
 
 
+@user_router.get("/")
+async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]):
+
+    return get_user_response(current_user)
+
+
+@user_router.get("/details", response_model=AccountDetails)
+async def get_account_details(current_user: Annotated[User, Depends(get_current_active_user)]):
+    account_details = user_service.get_user_account_details(current_user.id)
+    if not account_details:
+        return NotFound(status_code=404, content="Account details not found")
+
+    return account_details
+
+
 @user_router.post('/register')
 def register(user_data: User):
     user = user_service.create(
@@ -51,13 +66,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return Token(access_token=access_token, token_type="bearer")
 
 
-@user_router.get("/me")
-async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]):
-
-    return get_user_response(current_user)
-
-
-@user_router.put("/me")
+@user_router.put("/update")
 async def update_user_profile(
     current_user: Annotated[User, Depends(get_current_active_user)],
     user_update: UserUpdate = Body(...)
@@ -76,14 +85,3 @@ async def update_user_profile(
             detail="Failed to update user profile."
         )
     return {"message": update_message}
-
-
-@user_router.get("/me/details", response_model=AccountDetails)
-async def get_account_details(current_user: Annotated[User, Depends(get_current_active_user)]):
-    account_details = user_service.get_user_account_details(current_user.id)
-    if not account_details:
-        return NotFound(status_code=404, content="Account details not found")
-
-    return account_details
-
-

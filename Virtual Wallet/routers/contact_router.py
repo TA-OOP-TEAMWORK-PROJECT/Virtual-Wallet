@@ -16,6 +16,17 @@ async def view_contacts_list(current_user: Annotated[User, Depends(get_current_a
     return contacts
 
 
+@contact_router.get("/search")
+async def search_contacts(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    search: str,
+    contact_list: bool = Query(False)
+):
+    contacts = get_username_by(current_user.id, search, contact_list)
+    return contacts
+
+
+
 @contact_router.post("/add") #Could
 async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)], contact_request: constr(min_length=2, max_length=20)):
     contact = add_user_to_contacts(current_user.id, contact_request)
@@ -29,16 +40,6 @@ async def add_external_contact(
 ):
     contact = add_external_contact(current_user.id, contact_data)
     return contact
-
-
-@contact_router.get("/search")
-async def search_contacts(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-    search: str,
-    contact_list: bool = Query(False)
-):
-    contacts = get_username_by(current_user.id, search, contact_list)
-    return contacts
 
 
 @contact_router.delete("/remove")
