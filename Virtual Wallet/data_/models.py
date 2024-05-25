@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, EmailStr, Field, constr, conint, field_validator
+from pydantic import BaseModel, EmailStr, Field, constr, conint, validator
 from datetime import date, datetime
 
 
@@ -90,7 +90,7 @@ class Card(BaseModel):
     wallet_id: int | None = None
     is_virtual: bool | None = Field(default=False)
 
-    @field_validator('number')
+    @validator('number')
     def validate_card_number(cls, value):    #card_number = "4242 4242 4242 4242"
 
         # Remove any spaces and convert to a list of integers
@@ -137,7 +137,7 @@ class Transactions(BaseModel):
     contact_list_id: int | None = None
     category_id: int | None = None
 
-    @field_validator('is_recurring')
+    @validator('is_recurring')
     def validate_recurring_state(cls, value):
         if value == 1:
             return True
@@ -213,7 +213,7 @@ class Wallet(BaseModel):
     user_id: int
 
     @classmethod
-    def from_query_result(cls, id:int|None, amount, user_id):
+    def from_query_result(cls, id:int | None, amount: int | None, user_id):
         return cls(
             id=id,
             amount=amount,

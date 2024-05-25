@@ -161,5 +161,3 @@ def get_user_transactions(wallet_id: int) -> list[Transactions]:
         (wallet_id,)
     )
     return [Transactions.from_query_result(*row) for row in data]
-
-
