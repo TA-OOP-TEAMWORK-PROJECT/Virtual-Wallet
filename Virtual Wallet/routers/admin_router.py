@@ -52,7 +52,7 @@ def get_all_users_route(page: int = 1, admin: User = Depends(get_current_admin_u
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@admin_router.get("/users/{search_type}/{search_value}", response_model=list[User])
+@admin_router.get("/users/{search_type}/{search_value}", response_model=list[User]) #
 async def get_user_by_search_type(search_type: str, search_value: str):
     if search_type not in ["id", "username", "email", "phone"]:
         raise HTTPException(status_code=400, detail="Invalid search type. Must be one of 'id', 'username', 'email', or 'phone'.")
