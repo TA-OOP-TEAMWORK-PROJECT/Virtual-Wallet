@@ -9,6 +9,8 @@ from routers.transaction_router import transaction_router
 from routers.user_router import user_router
 from routers.category_router import category_router
 from routers.finance_router import finance_router
+from routers.card_router import card_router
+from routers.contact_router import contact_router
 
 app = FastAPI(title="PayTheBills", description=description, openapi_tags=tags_metadata)
 
