@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from pydantic import constr
-
 from common.response import *
 from data_.models import UserUpdate, AccountDetails, ExternalContacts
 from services import user_service
 from common.auth import *
 from services.user_service import get_user_response
-
+import requests
 user_router = APIRouter(prefix='/users', tags=["Users"])
 
 
@@ -69,7 +68,7 @@ async def view_contacts_list(current_user: Annotated[User, Depends(get_current_a
 
 
 @user_router.post("/contacts/add") #Could
-async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)], contact_request: constr(min_length=2, max_length=20)):
+async def add_contact(current_user: Annotated[User, Depends(get_current_active_user)], contact_request: constr(min_length=2, max_length=20)): # type: ignore
     contact = user_service.add_user_to_contacts(current_user.id, contact_request)
     return contact
 

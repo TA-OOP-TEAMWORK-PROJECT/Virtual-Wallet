@@ -35,7 +35,9 @@ async def unblock_user_endpoint(user_id: int, admin: User = Depends(get_current_
         raise HTTPException(status_code=404, detail=str(e))
     
 @admin_router.post('/approve/{user_id}')
-def approve_registration(user_id: int):
+def approve_registration(user_id: int, admin: User = Depends(get_current_admin_user)):
+    if not admin:
+        raise HTTPException(status_code=401, detail='You are not authorized!')
     try:
         approve_user(user_id)
         return {'message': 'User approved successfully'}
@@ -82,7 +84,9 @@ def get_all_users_route(page: int = 1, admin: User = Depends(get_current_admin_u
         raise HTTPException(status_code=500, detail=str(e))
     
 @admin_router.get("/users/{search_type}/{search_value}", response_model=list[User])
-async def get_user_by_search_type(search_type: str, search_value: str):
+async def get_user_by_search_type(search_type: str, search_value: str, admin: User = Depends(get_current_admin_user)):
+    if not admin:
+        raise HTTPException(status_code=401, detail='You are not authorized!')
     if search_type not in ["id", "username", "email", "phone"]:
         raise HTTPException(status_code=400, detail="Invalid search type. Must be one of 'id', 'username', 'email', or 'phone'.")
     

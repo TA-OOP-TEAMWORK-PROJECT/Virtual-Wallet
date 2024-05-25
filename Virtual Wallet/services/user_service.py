@@ -6,6 +6,8 @@ from fastapi import HTTPException
 from data_.models import User
 from services.admin_service import send_registration_email
 
+
+
 def create(username: str, password: str, first_name: str,
            last_name: str, email: str, phone_number: str) -> User | None: ##Updated
 
