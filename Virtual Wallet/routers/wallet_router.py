@@ -2,32 +2,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from common.auth import get_current_active_user
-from data_.models import Card, User
-from services import wallet_service
-from services.wallet_service import delete, add_money_to_wallet, withdraw_money_from_wallet, get_wallet_balance
+from data_.models import User
+from services.wallet_service import add_money_to_wallet, withdraw_money_from_wallet, get_wallet_balance
 
 wallet_router = APIRouter(prefix='/wallets', tags=["Wallet"])
-
-
-@wallet_router.post("/add/card")
-async def add_new(card: Card,
-                  current_user: Annotated[User, Depends(get_current_active_user)]):
-
-    command = 'add'
-    return wallet_service.add(card, current_user.id, command)
-
-
-@wallet_router.post("/create/card")
-async def create_new_card(card: Card,
-                          current_user: Annotated[User, Depends(get_current_active_user)]):
-
-    command = 'create'
-    return wallet_service.add(card, current_user.id, command)
-
-
-@wallet_router.put("/delete/{card_id}")
-async def delete_card(card_id: int, current_user: Annotated[User, Depends(get_current_active_user)]):
-    return delete(card_id, current_user.id)
 
 
 @wallet_router.post("/top-up")

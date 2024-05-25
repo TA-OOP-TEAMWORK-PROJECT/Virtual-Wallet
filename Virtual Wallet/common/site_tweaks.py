@@ -14,11 +14,22 @@ tags_metadata = [
     },
 
     {
-        "name": "Auth",
-        "description": "Login into your account and forget about troubles!",
+        "name": "Contacts",
+        "description": "Add a friend, remove a foe or a money seeking villain.",
     },
+
+    # {
+    #     "name": "Auth",
+    #     "description": "Login into your account and forget about troubles!",
+    # },
+
     {
         "name": "Wallet",
+        "description": "Spend your money wisely, traveller.",
+    },
+
+    {
+        "name": "Cards",
         "description": "Your money are either safe or gone with us.",
     },
 
