@@ -1,7 +1,7 @@
 
 from pydantic import BaseModel, EmailStr, Field, constr, conint, field_validator
 from datetime import date, datetime
-import numpy as np
+
 
 
 class Role:
