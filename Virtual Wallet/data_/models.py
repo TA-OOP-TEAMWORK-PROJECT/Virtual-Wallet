@@ -213,7 +213,7 @@ class Wallet(BaseModel):
     user_id: int
 
     @classmethod
-    def from_query_result(cls, id:int|None, amount, user_id):
+    def from_query_result(cls, id:int | None, amount: int | None, user_id):
         return cls(
             id=id,
             amount=amount,
