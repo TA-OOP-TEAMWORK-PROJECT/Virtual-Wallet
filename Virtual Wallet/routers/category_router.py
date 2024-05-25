@@ -6,6 +6,14 @@ from typing import Annotated
 
 category_router = APIRouter(prefix='/categories', tags=["Categories"])
 
+
+@category_router.get("/")
+async def view_categories(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+):
+    return category_service.view_categories(current_user.id)
+
+
 @category_router.post("/")
 async def create_category(
     title: str,
@@ -13,11 +21,6 @@ async def create_category(
 ):
     return category_service.create_category(current_user.id, title)
 
-@category_router.get("/")
-async def view_categories(
-    current_user: Annotated[User, Depends(get_current_active_user)]
-):
-    return category_service.view_categories(current_user.id)
 
 @category_router.post("/{category_id}/transactions/{transaction_id}")
 async def link_transaction(

@@ -15,8 +15,6 @@ scheduler = BackgroundScheduler()
 pending_confirmations: Dict[str, Dict] = {}
 
 
-
-
 @transaction_router.on_event('startup')
 async def startup_event():
 
@@ -34,6 +32,23 @@ def shutdown_event():
     scheduler.shutdown()
 
 
+@transaction_router.get("/")
+def view_transactions(current_user: Annotated[User, Depends(get_current_active_user)],
+            sort:  str | None = None,
+            sort_by: str | None = None,
+            search: str | None = None):
+
+    result = get_transactions(current_user, search)
+
+    if sort and (sort == 'asc' or sort == 'desc'):
+        result = sort_transactions(result, sort_by, is_reverse=sort == 'desc')
+
+    return get_transaction_response(result)
+
+
+@transaction_router.get("/recurring")
+def create_recurring_transaction():
+    pass
 
 
 @transaction_router.post("/{username}")
@@ -43,7 +58,7 @@ def transfer_to_user(cur_transaction: UserTransfer, username: str,
     return user_transfer(cur_transaction, username, current_user)
 
 
-@transaction_router.post("/new_transaction/in_app")
+@transaction_router.post("/new/in-app")
 def create_new_transaction(cur_transaction: UserTransfer,
                            search: str,
                            current_user: Annotated[User, Depends(get_current_active_user)]):
@@ -57,7 +72,7 @@ def create_new_transaction(cur_transaction: UserTransfer,
 
 
 
-@transaction_router.post("/new_transaction/bank_transfer")
+@transaction_router.post("/new/bank-transfer")
 def create_bank_transfer(ext_user: ExternalTransfer,
                          cur_transaction: UserTransfer,
                          current_user: Annotated[User, Depends(get_current_active_user)]):
@@ -70,7 +85,7 @@ def create_bank_transfer(ext_user: ExternalTransfer,
     return {"confirmation_id": confirmation_id, "message": "Please confirm the transaction"}
 
 
-@transaction_router.post("/confirm-transfer/{confirmation_id}")
+@transaction_router.post("/confirm/{confirmation_id}")
 async def confirm_transfer(confirmation_id: int,
                            response: ConfirmationResponse):
 
@@ -94,18 +109,13 @@ async def confirm_transfer(confirmation_id: int,
         del pending_confirmations[confirmation_id]
         return 'The transfer was denied!'
 
-@transaction_router.get("/")
-def view_transactions(current_user: Annotated[User, Depends(get_current_active_user)],
-            sort:  str | None = None,
-            sort_by: str | None = None,
-            search: str | None = None):
 
-    result = get_transactions(current_user, search)
+@transaction_router.post("/recurring/new")
+def set_recurring_transaction(current_user: Annotated[User, Depends(get_current_active_user)]):
+    #може да си сетнеш като погледнеш всички транзакции до сега които не са в приловението и да станат recurring
 
-    if sort and (sort == 'asc' or sort == 'desc'):
-        result = sort_transactions(result, sort_by, is_reverse=sort == 'desc')
+    result = create_recurring_transaction
 
-    return get_transaction_response(result)
 
 @transaction_router.put("/{transaction_id}/amount/status")
 def status_update(transaction_id: int, new_status: str,
@@ -115,17 +125,6 @@ def status_update(transaction_id: int, new_status: str,
     return result
 
 
-@transaction_router.post("/recurring_transactions/new")
-def set_recurring_transaction(current_user: Annotated[User, Depends(get_current_active_user)]):
-    #може да си сетнеш като погледнеш всички транзакции до сега които не са в приловението и да станат recurring
-
-    result = create_recurring_transaction
-
-
-@transaction_router.get("/recurring_transactions")
-def create_recurring_transaction():
-    pass
-
-@transaction_router.put("/recurring_transactions/{transaction_id}/cancel")
+@transaction_router.put("/recurring/{transaction_id}/cancel")
 def create_recurring_transaction():
     pass

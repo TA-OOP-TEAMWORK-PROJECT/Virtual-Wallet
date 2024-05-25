@@ -11,7 +11,7 @@ def get_top_10_cryptos():
     parameters = {
         'start': '1',
         'limit': '10',
-        'convert': 'USD'
+        'convert': 'BGN'
     }
     response = requests.get(url, headers=headers, params=parameters)
     response.raise_for_status()

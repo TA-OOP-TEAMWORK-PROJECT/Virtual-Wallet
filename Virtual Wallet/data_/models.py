@@ -3,7 +3,6 @@ from pydantic import BaseModel, EmailStr, Field, constr, conint, field_validator
 from datetime import date, datetime
 
 
-
 class Role:
 
     ADMIN = 'admin'
