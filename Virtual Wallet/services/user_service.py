@@ -137,10 +137,10 @@ def get_user_wallet(user_id: int):
     return [Wallet.from_query_result(*row) for row in data][0]  #!!!
 
 
-def get_user_categories(transaction_id: int) -> list[Categories]:
+def get_user_categories(user_id: int) -> list[Categories]:
     data = read_query(
         '''SELECT id, title, user_id FROM categories WHERE user_id = ?''',
-        (transaction_id,)
+        (user_id,)
     )
     return [Categories.from_query_result(*row) for row in data]
 
