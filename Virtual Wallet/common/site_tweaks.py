@@ -41,6 +41,11 @@ tags_metadata = [
     {
         "name": "Categories",
         "description": "Use your imagination to define your in-app world.",
+    },
+
+    {
+        "name": "Financial news",
+        "description": "Check the latest information on how to easily waste your money.",
     }
 ]
 

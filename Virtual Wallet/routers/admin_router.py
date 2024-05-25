@@ -3,9 +3,6 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from data_.models import Transactions, User
 from services.admin_service import deny_pending_transaction, get_all_transactions, get_pending_transactions, get_all_users
-
-admin_router = APIRouter(prefix='/admins')
-
 from services.admin_service import block_user, unblock_user, get_user
 from common.auth import get_current_admin_user
 from common.response import BadRequest, NotFound, Unauthorized, MessageServiceError
@@ -13,10 +10,11 @@ from services.admin_service import approve_user
 
 admin_router = APIRouter(prefix='/admin', tags=["Admin"])
 
-@admin_router.put("/block_user/{user_id}")
+
+@admin_router.put("/block/{user_id}")
 async def block_user_endpoint(user_id: int, admin: User = Depends(get_current_admin_user)):
     if not admin:
-        return HTTPException(status_code=401, content='You are not authorized!')
+        return HTTPException(status_code=401, detail='You are not authorized!')
     try:
         block_user(user_id)
         return {'message": "User blocked successfully'}
@@ -24,7 +22,7 @@ async def block_user_endpoint(user_id: int, admin: User = Depends(get_current_ad
         raise NotFound(content=str(e))
 
 
-@admin_router.put("/unblock_user/{user_id}")
+@admin_router.put("/unblock/{user_id}")
 async def unblock_user_endpoint(user_id: int, admin: User = Depends(get_current_admin_user)):
     if not admin:
         raise HTTPException(status_code=401, detail="You are not authorized!")
@@ -33,7 +31,8 @@ async def unblock_user_endpoint(user_id: int, admin: User = Depends(get_current_
         return {'message": "User unblocked successfully'}
     except MessageServiceError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    
+
+
 @admin_router.post('/approve/{user_id}')
 def approve_registration(user_id: int):
     try:
@@ -43,7 +42,7 @@ def approve_registration(user_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@admin_router.get('/get_all_transactions')
+@admin_router.get('/transactions')
 def get_all_transactions_route(admin: User = Depends(get_current_admin_user),
                                page: int = 1,
                                page_size: int = 10,
@@ -60,8 +59,9 @@ def get_all_transactions_route(admin: User = Depends(get_current_admin_user),
         return transactions
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-@admin_router.get('/get_pending_transactions')
+
+
+@admin_router.get('/transactions/pending')
 def get_pending_transactions_route(admin: User = Depends(get_current_admin_user)):
     if not admin:
         raise HTTPException(status_code=401, detail='You are not authorized!')
@@ -70,8 +70,9 @@ def get_pending_transactions_route(admin: User = Depends(get_current_admin_user)
         return transactions
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-@admin_router.get('/get_all_users')
+
+
+@admin_router.get('/users')
 def get_all_users_route(page: int = 1, admin: User = Depends(get_current_admin_user)):
     if not admin:
         raise HTTPException(status_code=401, detail='You are not authorized!')
@@ -80,7 +81,8 @@ def get_all_users_route(page: int = 1, admin: User = Depends(get_current_admin_u
         return users
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+
 @admin_router.get("/users/{search_type}/{search_value}", response_model=list[User])
 async def get_user_by_search_type(search_type: str, search_value: str):
     if search_type not in ["id", "username", "email", "phone"]:
@@ -97,7 +99,8 @@ async def get_user_by_search_type(search_type: str, search_value: str):
         
     return users
 
-@admin_router.post('/deny_pending_transaction/{transaction_id}')
+
+@admin_router.post('/transactions/deny/{transaction_id}')
 def cancel_transaction_route(transaction_id: int, admin: User = Depends(get_current_admin_user)):
     if not admin:
         raise HTTPException(status_code=401, detail='You are not authorized!')

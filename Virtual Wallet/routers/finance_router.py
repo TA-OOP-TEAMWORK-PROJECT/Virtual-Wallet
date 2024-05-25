@@ -10,7 +10,7 @@ finance_router = APIRouter(prefix='/Finance', tags= ['Financial news'])
 async def top_10_cryptos(current_user: User = Depends(get_current_active_user)):
     try:
         cryptos = get_top_10_cryptos()
-        filtered_cryptos = [{ 'name': crypto['name'], 'symbol': crypto['symbol'], 'price': crypto['quote']['USD']['price'] } for crypto in cryptos]
+        filtered_cryptos = [{ 'name': crypto['name'], 'symbol': crypto['symbol'], 'price': crypto['quote']['BGN']['price'] } for crypto in cryptos]
         return filtered_cryptos
     except requests.HTTPError as e:
         raise HTTPException(status_code=e.response.status_code, detail=str(e))
