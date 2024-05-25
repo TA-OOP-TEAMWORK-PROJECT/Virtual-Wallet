@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, EmailStr, Field, constr, conint, validator
+from pydantic import BaseModel, EmailStr, Field, constr, conint, field_validator
 from datetime import date, datetime
 
 
@@ -24,7 +24,7 @@ class User(BaseModel):
     first_name: str = Field(max_length=45)
     last_name: str = Field(max_length=45)
     email: EmailStr                             # Valid and UNIQUE!!!!
-    phone_number: str = constr(min_length=8, max_length=10)   # UNIQUE
+    phone_number: str = constr(min_length=8, max_length=10)   # UNIQUE   TODO НЕ ми излиза и като се опитвам да се регистрирам през докс//  да чупи const??? или от версията на нещо
     role: str = Field(default=Role.USER, description="User role, e.g., 'admin', 'user'")
     hashed_password: str | None = None
     is_blocked: bool = Field(default=True)
@@ -90,7 +90,7 @@ class Card(BaseModel):
     wallet_id: int | None = None
     is_virtual: bool | None = Field(default=False)
 
-    @validator('number')
+    @field_validator('number')
     def validate_card_number(cls, value):    #card_number = "4242 4242 4242 4242"
 
         # Remove any spaces and convert to a list of integers
@@ -137,7 +137,7 @@ class Transactions(BaseModel):
     contact_list_id: int | None = None
     category_id: int | None = None
 
-    @validator('is_recurring')
+    @field_validator('is_recurring')
     def validate_recurring_state(cls, value):
         if value == 1:
             return True
@@ -244,6 +244,7 @@ class ViewContacts(BaseModel):
 
 
 class TransferConfirmation(BaseModel):
+    transaction_id:int|None = None
     new_wallet_amount: float
     transaction_amount: float
     transaction_date: date
@@ -261,7 +262,7 @@ class ConfirmationResponse(BaseModel):
 
 
 class ExternalContacts(BaseModel):
-    id: int | None or None
+    id: int | None = None
     contact_name: str | constr(min_length=2, max_length=100) = None
     contact_email: EmailStr | None = None
     iban: str | constr(min_length=15, max_length=34) = None

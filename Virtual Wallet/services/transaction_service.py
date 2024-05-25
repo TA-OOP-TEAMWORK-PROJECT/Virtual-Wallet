@@ -30,7 +30,7 @@ def user_transfer(cur_transaction: UserTransfer, username: str, cur_user): #В �
 
     is_friend = check_contact_list(cur_user.id, receiver_user.id)
 
-
+#transaction_id v transfer_message
     transfer_message = TransferConfirmation(new_wallet_amount=wallet.amount,
                                             transaction_amount=cur_transaction.amount,
                                             transaction_date=date.today(),
@@ -104,7 +104,7 @@ def bank_transfer(ext_user, cur_transaction, current_user):
 
     def wrapper():
         try:
-            external_contact = get_username_by(current_user.id, search, contact_list=True)[1] # da se prekrysti che i tyrsi po neshto w bazata
+            external_contact = get_username_by(current_user.id, search, contact_list=True, is_external=True)[1] # da se prekrysti che i tyrsi po neshto w bazata
             contact_list = get_contact_list(current_user, ext_user.contact_name)
 
             return contact_list
@@ -138,7 +138,8 @@ def bank_transfer(ext_user, cur_transaction, current_user):
     return transfer_message
 
 
-def process_transfer(pending_request):
+def process_transfer(pending_request): #is_confirmed - в случай, че решим, че искаме да записваме отказани трансфери
+
 
 
     if pending_request.is_external:
@@ -154,6 +155,13 @@ def process_transfer(pending_request):
                                 VALUES(?,?,?,?)''',
                                            (pending_request.transaction_amount, date.today(),
                                             pending_request.wallet_id, pending_request.receiver_id))
+
+        transaction_id = cur_user_insert
+        cur_user_update_status = update_query('''
+        UPDATE transactions
+        SET status = "confirmed"
+        WHERE id = ?''',
+        (cur_user_insert, ))
 
     else:
 
@@ -365,7 +373,7 @@ def change_status(id, new_status): #trqbva li proverka za tova dali ima takava t
         WHERE id = ?''',
         (new_status, id))
 
-        if new_status == 'denied':
+        if new_status == 'denied': # да сменя статуса за двамата в базата
             return Response(status_code=200, content='You denied the transaction')
         return Response(status_code=200, content='You confirmed the transaction')
 

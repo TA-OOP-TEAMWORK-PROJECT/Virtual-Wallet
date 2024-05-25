@@ -27,21 +27,37 @@ def get_user_account_details(user_id: int) -> AccountDetails:  #  Дали мо�
     )
 
 
-def get_username_by(user_id: int, search: str, contact_list: bool = False) -> dict:
+def get_username_by(user_id: int, search: str, contact_list: bool = False, is_external=None) -> dict:
     results = []
 
-    user_data = read_query('''
-        SELECT username 
-        FROM users
-        WHERE email LIKE ?
-        OR username LIKE ?
-        OR phone_number LIKE ?''',
-        (f'%{search}%', f'%{search}%', f'%{search}%'))
+    if not is_external:   #за да не проверява в таблицата Users без да има нужда
+        user_data = read_query('''
+                SELECT username 
+                FROM users
+                WHERE email LIKE ?
+                OR username LIKE ?
+                OR phone_number LIKE ?''',
+                (f'%{search}%', f'%{search}%', f'%{search}%'))
 
-    for row in user_data:
-        results.append(row[0])
+        for row in user_data:
+            results.append(row[0])
 
-    if contact_list:
+    if contact_list and is_external:
+        external_user_data = read_query('''
+                    SELECT external_user.contact_name 
+                    FROM external_user
+                    JOIN contact_list ON external_user.id = contact_list.external_user_id
+                    WHERE contact_list.user_id = ?
+                    AND (external_user.contact_name LIKE ?
+                    OR external_user.contact_email LIKE ?
+                    OR external_user.iban LIKE ?)''',
+                    (user_id, f'%{search}%', f'%{search}%', f'%{search}%'))
+
+        for row in external_user_data:
+            results.append(row[0])
+
+    if contact_list and not is_external:
+
         user_data = read_query('''
             SELECT users.username 
             FROM users
@@ -52,20 +68,7 @@ def get_username_by(user_id: int, search: str, contact_list: bool = False) -> di
             OR users.phone_number LIKE ?)''',
             (user_id, f'%{search}%', f'%{search}%', f'%{search}%'))
 
-        external_user_data = read_query('''
-            SELECT external_user.contact_name 
-            FROM external_user
-            JOIN contact_list ON external_user.id = contact_list.external_user_id
-            WHERE contact_list.user_id = ?
-            AND (external_user.contact_name LIKE ?
-            OR external_user.contact_email LIKE ?
-            OR external_user.iban LIKE ?)''',
-            (user_id, f'%{search}%', f'%{search}%', f'%{search}%'))
-
         for row in user_data:
-            results.append(row[0])
-
-        for row in external_user_data:
             results.append(row[0])
 
     if not results:
@@ -174,6 +177,7 @@ def remove_contact(user_id: int, removed_user_id: int) -> bool:
 
 
 def get_contact_list(current_user, contact_name):
+
     data = read_query('''
     SELECT contact_list.id, user_id, external_user_id
     FROM contact_list
@@ -181,7 +185,7 @@ def get_contact_list(current_user, contact_name):
     ON external_user.id = contact_list.external_user_id
     WHERE contact_list.user_id = ?
     AND external_user.contact_name = ?''',
-                      (current_user.id, contact_name))
+    (current_user.id, contact_name))
 
     id, user_id, external_user_id = data[0]
     return ContactList(id=id, user_id=user_id, external_user_id=external_user_id)

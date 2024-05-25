@@ -9,7 +9,7 @@ from services.admin_service import send_registration_email
 
 
 def create(username: str, password: str, first_name: str,
-           last_name: str, email: str, phone_number: str) -> User | None: ##Updated
+           last_name: str, email: str, phone_number: str) -> User | None:
 
     existing_user = read_query('SELECT id FROM users WHERE username = ?', (username,))
     if existing_user:
