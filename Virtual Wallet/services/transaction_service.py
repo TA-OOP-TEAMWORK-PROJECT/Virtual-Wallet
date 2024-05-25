@@ -1,12 +1,14 @@
 from datetime import date, datetime, timedelta
 from typing import Annotated
+
 from fastapi import Response, HTTPException
-import logging
+
+
 from data_.database import insert_query, update_query, read_query
 from data_.models import UserTransfer, User, Transactions, RecurringTransaction, Wallet, TransferConfirmation
 from services.card_service import find_wallet_id
-from services.user_service import find_by_username, get_user_wallet, find_by_id
-from services.contact_service import get_username_by, add_external_contact, get_contact_list
+from services.user_service import find_by_username, get_user_wallet, find_by_id, get_username_by, add_external_contact, \
+    get_contact_list
 
 
 def user_transfer(cur_transaction: UserTransfer, username: str, cur_user): #В бодито има само сума
@@ -100,17 +102,6 @@ def new_transfer(cur_transaction, search, cur_user):
      return user_transfer(cur_transaction, receiver, cur_user)
 
 
-'''
-class ExternalContacts(BaseModel):
-    id: int | None = None
-    is_recurring: int|None = None                     
-    recurring_date: date|None = None
-    contact_name: str | constr(min_length=2, max_length=100)
-    contact_email: EmailStr | None = None
-    iban: str | constr(min_length=15, max_length=34)
-
-'''
-
 def bank_transfer(ext_user, cur_transaction, current_user):
     search = ext_user.iban
 
@@ -123,9 +114,7 @@ def bank_transfer(ext_user, cur_transaction, current_user):
 
 
         except HTTPException as ex:
-            logging.basicConfig(level=logging.INFO)
-            logger = logging.getLogger(__name__)
-            logger.error(f"Exception when searching for external contact: {ex}", exc_info=True)
+
 
             return  add_external_contact(current_user.id, ext_user)
 
@@ -173,17 +162,48 @@ def process_transfer(pending_request):
 
         transfer_to_user(pending_request)
 
+def get_recuring_transactions(search_by, search): #search e data, ako tyrsim vsichki tranzakcii ili user_id ako samo na 1 user
 
-def recurring_transactions(): # da izprashtam napravo v bank_transfer?
+    if search_by == 'Date':
 
-    today_transactions = read_query('''
-    SELECT id, amount, recurring_period, recurring_date, transaction_date, wallet_id, contact_list_id
-    FROM transactions
-    WHERE is_recurring = 1 
-    AND recurring_date = ?''',
-    (date.today(), ))
+        today_transactions = read_query('''
+              SELECT id, amount, recurring_period, recurring_date, transaction_date, wallet_id, contact_list_id
+              FROM transactions
+              WHERE is_recurring = 1 
+              AND recurring_date = ?''',
+             (search, ))
+
+        return today_transactions
+
+    if search_by == "User":
+
+        wallet_id = get_user_wallet(search.id) #is_recurring
+
+        transactions = read_query('''
+          SELECT id, is_recurring, amount, recurring_period, recurring_date, transaction_date, wallet_id, contact_list_id
+          FROM transactions
+          WHERE is_recurring = 1
+          AND wallet_id = 1 ''',
+          (wallet_id, ))
+
+        if transactions is None:
+            pass
+
+    transactions_result = [Transactions.create_transaction_class(*t) for t in transactions]
+    return get_transaction_response(transactions_result) #TODO - da izliza kat' orata
 
 
+
+def recurring_transactions():
+
+    today_transactions = get_recuring_transactions("Date", date.today())
+
+    #     read_query('''
+    # SELECT id, amount, recurring_period, recurring_date, transaction_date, wallet_id, contact_list_id
+    # FROM transactions
+    # WHERE is_recurring = 1
+    # AND recurring_date = ?''',
+    # (date.today(), ))
 
     for transaction in today_transactions:
 
@@ -220,9 +240,6 @@ def recurring_transactions(): # da izprashtam napravo v bank_transfer?
 
 
 
-
-
-
 def get_transactions(user: User, search):  # ako e nevaliden search
 
     user_wallet = find_wallet_id(user.id)
@@ -230,10 +247,10 @@ def get_transactions(user: User, search):  # ako e nevaliden search
 
     if search is None:
         data = read_query('''
-           SELECT id, is_recurring, amount, status, message, transaction_date, recurring_date, wallet_id, receiver_id
+           SELECT id, is_recurring, amount, message, recurring_date, transaction_date, wallet_id, receiver_id, contact_list_id
            FROM transactions
            WHERE wallet_id = ?''',
-           (user_wallet.id,))
+           (user_wallet.id, ))
 
 
     else:
@@ -243,7 +260,7 @@ def get_transactions(user: User, search):  # ako e nevaliden search
 
 
             data = read_query('''
-            SELECT id, is_recurring, amount, status, message, transaction_date, recurring_date, wallet_id, receiver_id
+            SELECT id, is_recurring, amount, message, recurring_date, transaction_date, wallet_id, receiver_id, contact_list_id
             FROM transactions
             WHERE wallet_id = ? 
             AND transaction_date = ?''',
@@ -255,14 +272,14 @@ def get_transactions(user: User, search):  # ako e nevaliden search
             receiver = find_by_username(search)
 
             data = read_query('''
-            SELECT id, is_recurring, amount, status, message, transaction_date, recurring_date, wallet_id, receiver_id
+            SELECT id, is_recurring, amount, message, recurring_date, transaction_date, wallet_id, receiver_id, contact_list_id
             FROM transactions
             WHERE wallet_id = ? 
             AND receiver_id = ?''',
             (user_wallet.id, receiver.id))
 
 
-    return data
+    return [Transactions.create_transaction_class(*t) for t in data]
 
 
 def sort_transactions(transactions_list, sort_by, is_reverse):
@@ -271,12 +288,12 @@ def sort_transactions(transactions_list, sort_by, is_reverse):
     updated_transaction_list = []
     for data in transactions_list:
 
-        id, is_recurring, amount, status, message, transaction_date, recurring_date, wallet_id, receiver_id = data
+        id, is_recurring, amount, status, message, transaction_date, recurring_date, wallet_id, receiver_id, contact_list_id = data
 
         updated_transaction_list.append(Transactions.from_query_result
                                         (id, is_recurring, amount, status,
                                          message, transaction_date, recurring_date,
-                                         wallet_id, receiver_id))
+                                         wallet_id, receiver_id, contact_list_id))
 
     sorted_transactions = None
     if not sort_by:
@@ -288,36 +305,55 @@ def sort_transactions(transactions_list, sort_by, is_reverse):
     return sorted_transactions
 
 def get_transaction_response(transactions_list):
-
     transactions = {}
 
-    for key,value in enumerate(transactions_list):
+    for key, value in enumerate(transactions_list):
 
+        # Pyrwo питам дали е рекъринг и си редя json-а и на края питам дали е external и добаваям сенд ту
 
-        receiver = find_by_id(value.receiver_id)
 
         if value.is_recurring:
-
             transactions[key + 1] = {
-                 "Reccuring": 'Transaction is recurring',
-                 "Amount": value.amount,
-                 "Status": value.status,
-                 "Date of next transfer": value.recurring_date,
-                 "Last transfer date": value.transaction_date,
-                 "Send to": f"{receiver.first_name} {receiver.last_name}"
+                "Reccuring": 'Transaction is recurring',
+                "Amount": value.amount,
+                "Status": value.status,
+                "Date of next transfer": value.recurring_date,
+                "Last transfer date": value.transaction_date
             }
 
-        else:
-
+        if not value.is_recurring:
             transactions[key + 1] = {
                 "Amount": value.amount,
                 "Status": value.status,
                 "Date of next transfer": value.recurring_date,
-                "Last transfer date": value.transaction_date,
-                "Send to": f"{receiver.first_name} {receiver.last_name}"
+                "Last transfer date": value.transaction_date
             }
 
-    return transactions
+        if value.receiver_id:
+            receiver = find_by_id(value.receiver_id)
+            transactions[key + 1]["Send to"] = f"{receiver.first_name} {receiver.last_name}"
+
+        else:
+            external_receiver = find_external_user_contact_list(value.contact_list_id)
+            transactions[key + 1]["Send to"] = f"{external_receiver.contact_name}"
+
+
+def find_external_user_contact_list(contact_list_id: int):
+
+    external_user_id_data = read_query(
+        '''SELECT external_user_id
+                  FROM contact_list
+                  WHERE id = ?''',
+        (contact_list_id, ))[0][0]
+
+    external_user_data = read_query('''
+    SELECT id, contact_name, contact_email, iban
+    FROM external_user 
+    WHERE id =?''',
+    (external_user_id_data, ))
+    return next((User.from_query_result(*row) for row in external_user_data), None)
+
+
 
 
 def change_status(id, new_status): #trqbva li proverka za tova dali ima takava tranzakciq i za user-a// zaz tova dali e validna proverkata
@@ -369,8 +405,19 @@ def set_new_recurring_date(rec_trans):
     return new_date
 
 
+def confirmation_respose(pending_transaction, name):
 
-
+    return {
+        "Amount to pay":pending_transaction.transaction_amount,
+        "Date of payment": date.today(),
+        "Receiver": name
+    }
+    # new_wallet_amount = wallet.amount,
+    # transaction_amount = cur_transaction.amount,
+    # transaction_date = date.today(),
+    # wallet_id = wallet.id,
+    # receiver_id = contact_list.id,
+    # is_external = True)
 
 
 
