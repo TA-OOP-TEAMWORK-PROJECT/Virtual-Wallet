@@ -55,26 +55,25 @@ def view_recurring_transaction(current_user: Annotated[User, Depends(get_current
     return result
 
 
-
-
 @transaction_router.post("/{username}")
 def transfer_to_user(cur_transaction: UserTransfer, username: str,
                         current_user: Annotated[User, Depends(get_current_active_user)]):
 
-    return user_transfer(cur_transaction, username, current_user)
+    result = user_transfer(cur_transaction, username, current_user)
+    return result
 
 
 @transaction_router.post("/new_transaction/in_app")
-def create_new_transaction(cur_transaction: UserTransfer,
+def new_user_transaction(cur_transaction: UserTransfer,
                            search: str,
                            current_user: Annotated[User, Depends(get_current_active_user)]):
 
     transfer_message = new_transfer(cur_transaction, search, current_user)
 
-    confirmation_id = len(pending_confirmations)
+    confirmation_id = len(pending_confirmations) + 1
     pending_confirmations[confirmation_id] = transfer_message
 
-    return {"confirmation_id": confirmation_id, "message": "Please confirm the transaction",
+    return {"confirmation_id": confirmation_id, "message": "Please confirm the transaction:",
             "transaction":confirmation_respose(pending_confirmations[confirmation_id], current_user.username)}
 
 
@@ -96,7 +95,6 @@ def create_bank_transfer(ext_user: ExternalContacts,
 @transaction_router.post("/transfer-confirmation/{confirmation_id}")
 async def confirm_transfer(confirmation_id: int,
                            response: ConfirmationResponse):
-
 
     if confirmation_id not in pending_confirmations:
         raise HTTPException(status_code=404, detail="Confirmation ID not found")

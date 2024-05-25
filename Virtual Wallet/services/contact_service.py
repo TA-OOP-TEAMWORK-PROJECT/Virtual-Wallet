@@ -30,6 +30,7 @@ def get_user_account_details(user_id: int) -> AccountDetails:  #  Дали мо�
 def get_username_by(user_id: int, search: str, contact_list: bool = False, is_external=None) -> dict:
     results = []
 
+
     if not is_external:   #за да не проверява в таблицата Users без да има нужда
         user_data = read_query('''
                 SELECT username 

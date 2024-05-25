@@ -161,6 +161,19 @@ class Transactions(BaseModel):
                    contact_list_id=contact_list_id,
                    category_id=category_id)
 
+    @classmethod  # TODO
+    def create_transaction_class(cls, id, is_recurring, amount, recurring_period, recurring_date,
+                                 transaction_date, wallet_id, receiver_id, contact_list_id):
+        return cls(id=id,
+                   is_recurring=cls.validate_recurring_state(is_recurring),
+                   amount=amount,
+                   recurring_period=recurring_period,
+                   recurring_date=recurring_date,
+                   transaction_date=transaction_date,
+                   wallet_id=wallet_id,
+                   receiver_id=receiver_id,
+                   contact_list_id=contact_list_id)
+
 
 class RecurringTransaction(BaseModel):
 
@@ -244,8 +257,9 @@ class ViewContacts(BaseModel):
 
 
 class TransferConfirmation(BaseModel):
-    transaction_id:int|None = None
+
     new_wallet_amount: float
+    receiver_wallet_amount: float
     transaction_amount: float
     transaction_date: date
     wallet_id: int

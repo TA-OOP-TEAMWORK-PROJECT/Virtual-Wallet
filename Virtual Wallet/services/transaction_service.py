@@ -5,7 +5,7 @@ from data_.database import insert_query, update_query, read_query
 from data_.models import UserTransfer, User, Transactions, RecurringTransaction, Wallet, TransferConfirmation
 from services.card_service import find_wallet_id
 from services.user_service import find_by_username, get_user_wallet, find_by_id
-from services.contact_service import get_username_by, add_external_contact, get_contact_list
+from services.contact_service import get_username_by, add_external_contact, get_contact_list, view_user_contacts
 
 
 def user_transfer(cur_transaction: UserTransfer, username: str, cur_user): #В бодито има само сума
@@ -32,6 +32,7 @@ def user_transfer(cur_transaction: UserTransfer, username: str, cur_user): #В �
 
 #transaction_id v transfer_message
     transfer_message = TransferConfirmation(new_wallet_amount=wallet.amount,
+                                            receiver_wallet_amount=receiver_user_wallet.amount,
                                             transaction_amount=cur_transaction.amount,
                                             transaction_date=date.today(),
                                             wallet_id=wallet.id,
@@ -41,13 +42,16 @@ def user_transfer(cur_transaction: UserTransfer, username: str, cur_user): #В �
                                             is_external=False)
 
     if is_friend:
-        transfer_to_user(transfer_message)
+        return transfer_to_user(transfer_message)
+
+
 
     else:
 
         return transfer_message
 
 def transfer_to_user(transfer_message):
+
 
     cur_user_insert = insert_query('''
     INSERT INTO transactions(amount, transaction_date, wallet_id, receiver_id)
@@ -75,14 +79,28 @@ def transfer_to_user(transfer_message):
     WHERE user_id = ?''',
    (transfer_message.receiver_wallet_amount, transfer_message.receiver_id))
 
-    return Response(status_code=200, content=f'The amount of {transfer_message.transaction_amount} was sent.')
+    id_user_transaction = cur_user_insert
+    status_update_cur_user = update_query('''
+    UPDATE transactions
+    SET status = "confirmed"
+    WHERE id = ?''',
+     (id_user_transaction, ))
+
+    id_receiver = receiver_user_insert
+    status_update_cur_user = update_query('''
+    UPDATE transactions
+    SET status = "confirmed"
+    WHERE id = ?''',
+     (id_receiver, ))
+
+    raise HTTPException(status_code=200, detail=f'The amount of {transfer_message.transaction_amount} was sent.')
 
 def check_contact_list(sender_id, receiver_id):
 
     data = read_query('''
     SELECT CASE 
     WHEN EXISTS (SELECT 1 FROM contact_list 
-    WHERE contact_id = 1 AND user_id = 1)
+    WHERE contact_id = ? AND user_id = ?)
 	THEN TRUE 
     ELSE FALSE 
     END AS result''',
@@ -92,11 +110,11 @@ def check_contact_list(sender_id, receiver_id):
         return True
     return False
 
-def new_transfer(cur_transaction, search, cur_user):
+def new_transfer(cur_transaction, search, cur_user): #ук търси в целия апп/ ако искаме директно през контакт лист си имаме @transaction_router.post("/{username}")
 
-     receiver = get_username_by(cur_user.id, search, contact_list=False)[1]
+     receiver_username = get_username_by(cur_user.id, search, contact_list=False)[1]
 
-     return user_transfer(cur_transaction, receiver, cur_user)
+     return user_transfer(cur_transaction, receiver_username, cur_user)
 
 
 def bank_transfer(ext_user, cur_transaction, current_user):
@@ -165,7 +183,7 @@ def process_transfer(pending_request): #is_confirmed - в случай, че р�
 
     else:
 
-        transfer_to_user(pending_request)
+        result = transfer_to_user(pending_request)
 
 def get_recuring_transactions(search_by, search): #search e data, ako tyrsim vsichki tranzakcii ili user_id ako samo na 1 user
 
