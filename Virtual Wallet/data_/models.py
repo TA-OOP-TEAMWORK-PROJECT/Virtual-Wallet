@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, EmailStr, Field, constr, conint, validator
+from pydantic import BaseModel, EmailStr, Field, constr, conint, field_validator
 from datetime import date, datetime
 
 
@@ -90,7 +90,7 @@ class Card(BaseModel):
     wallet_id: int | None = None
     is_virtual: bool | None = Field(default=False)
 
-    @validator('number')
+    @field_validator('number')
     def validate_card_number(cls, value):    #card_number = "4242 4242 4242 4242"
 
         # Remove any spaces and convert to a list of integers
@@ -137,7 +137,7 @@ class Transactions(BaseModel):
     contact_list_id: int | None = None
     category_id: int | None = None
 
-    @validator('is_recurring')
+    @field_validator('is_recurring')
     def validate_recurring_state(cls, value):
         if value == 1:
             return True
@@ -160,6 +160,19 @@ class Transactions(BaseModel):
                    receiver_id=receiver_id,
                    contact_list_id=contact_list_id,
                    category_id=category_id)
+
+    @classmethod  # TODO
+    def create_transaction_class(cls, id, is_recurring, amount, recurring_period, recurring_date,
+                                 transaction_date, wallet_id, receiver_id, contact_list_id):
+        return cls(id=id,
+                   is_recurring=cls.validate_recurring_state(is_recurring),
+                   amount=amount,
+                   recurring_period=recurring_period,
+                   recurring_date=recurring_date,
+                   transaction_date=transaction_date,
+                   wallet_id=wallet_id,
+                   receiver_id=receiver_id,
+                   contact_list_id=contact_list_id)
 
 
 class RecurringTransaction(BaseModel):
@@ -244,7 +257,9 @@ class ViewContacts(BaseModel):
 
 
 class TransferConfirmation(BaseModel):
+
     new_wallet_amount: float
+    receiver_wallet_amount: float
     transaction_amount: float
     transaction_date: date
     wallet_id: int
@@ -261,7 +276,7 @@ class ConfirmationResponse(BaseModel):
 
 
 class ExternalContacts(BaseModel):
-    id: int | None or None
+    id: int | None = None
     contact_name: str | constr(min_length=2, max_length=100) = None
     contact_email: EmailStr | None = None
     iban: str | constr(min_length=15, max_length=34) = None
@@ -302,6 +317,3 @@ class AccountDetails(BaseModel): #
     categories: list[Categories]
     contacts: list[ContactList]
     transactions: list[Transactions]
-
-
-
