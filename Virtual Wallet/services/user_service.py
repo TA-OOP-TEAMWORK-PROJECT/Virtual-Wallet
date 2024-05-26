@@ -10,11 +10,8 @@ from services.admin_service import send_registration_email
 
 def create(username: str, password: str, first_name: str,
            last_name: str, email: str, phone_number: str) -> User | None: ##Updated
-
-    existing_user = read_query('SELECT id FROM users WHERE username = ?', (username,))
-    if existing_user:
-        raise HTTPException(status_code=400, detail=f'Username {username} is taken.')
-
+    password_check(password)
+    check_if_unique(username, email, phone_number)
     hash_password = auth.get_password_hash(password)
 
     generated_id = insert_query(
@@ -58,6 +55,12 @@ def update_user_profile(username: str, user_update: UserUpdate):
     if not current_user:
         return None
 
+    if user_update.email != current_user.email or user_update.phone_number != current_user.phone_number:
+        check_if_unique(
+            email=user_update.email if user_update.email != current_user.email else current_user.email,
+            phone_number=user_update.phone_number if user_update.phone_number != current_user.phone_number else current_user.phone_number
+        )
+
     update_fields = []
     update_params = []
     message_parts = []
@@ -73,6 +76,7 @@ def update_user_profile(username: str, user_update: UserUpdate):
         message_parts.append(f"phone number from {current_user.phone_number} to {user_update.phone_number}")
 
     if user_update.password:
+        password_check(user_update.password)
         hashed_password = auth.get_password_hash(user_update.password)
         update_fields.append("hashed_password = ?")
         update_params.append(hashed_password)
@@ -161,3 +165,30 @@ def get_user_transactions(wallet_id: int) -> list[Transactions]:
         (wallet_id,)
     )
     return [Transactions.from_query_result(*row) for row in data]
+
+
+def check_if_unique(username: str = None, email: str = None, phone_number: str = None):
+    if username:
+        existing_user = read_query('SELECT id FROM users WHERE username = ?', (username,))
+        if existing_user:
+            raise HTTPException(status_code=400, detail=f'Username {username} is taken.')
+    if email:
+        existing_email = read_query('SELECT id FROM users WHERE email = ?', (email,))
+        if existing_email:
+            raise HTTPException(status_code=400, detail=f'Email {email} is taken.')
+    if phone_number:
+        existing_phone_number = read_query('SELECT id FROM users WHERE phone_number = ?', (phone_number,))
+        if existing_phone_number:
+            raise HTTPException(status_code=400, detail=f'Phone number {phone_number} is taken.')
+
+
+def password_check(password: str) -> str:
+    if not any(char.isdigit() for char in password):
+        raise HTTPException(status_code=400, detail='Password must contain at least one digit')
+    if not any(char.isupper() for char in password):
+        raise HTTPException(status_code=400, detail='Password must contain at least one uppercase letter')
+    if not any(char.islower() for char in password):
+        raise HTTPException(status_code=400, detail='Password must contain at least one lowercase letter')
+    if not any(char in '+-*^&' for char in password):
+        raise HTTPException(status_code=400, detail='Password must contain at least one special character (+, -, *, ^, &)')
+    return password

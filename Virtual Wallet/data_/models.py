@@ -19,10 +19,10 @@ class User(BaseModel):
 
     id: int | None = None
     username: str = Field(min_length=2, max_length=20)
-    first_name: str = Field(max_length=45)
-    last_name: str = Field(max_length=45)
+    first_name: str = Field(min_length=1, max_length=45)
+    last_name: str = Field(min_length=1, max_length=45)
     email: EmailStr                             # Valid and UNIQUE!!!!
-    phone_number: str = constr(min_length=8, max_length=10)   # UNIQUE
+    phone_number: str = Field(min_length=8, max_length=10, pattern=r'^\d{8,10}$')   # UNIQUE
     role: str = Field(default=Role.USER, description="User role, e.g., 'admin', 'user'")
     hashed_password: str | None = None
     is_blocked: bool = Field(default=True)
@@ -47,34 +47,16 @@ class User(BaseModel):
 
 class UserCreate(BaseModel):
     username: str = Field(min_length=2, max_length=20)
-    password: str = constr(min_length=8, pattern=r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[+\-*^&]).+$')
-    first_name: str = Field(max_length=45)
-    last_name: str = Field(max_length=45)
+    password: str = Field(min_length=8, max_length=20)
+    first_name: str = Field(min_length=1, max_length=45)
+    last_name: str = Field(min_length=1, max_length=45)
     email: EmailStr
-    phone_number: str = constr(min_length=8, max_length=10)
-
-    @field_validator('password')
-    def password_complexity(cls, value):
-        if not any(char.isdigit() for char in value):
-            raise ValueError('Password must contain at least one digit')
-        if not any(char.isupper() for char in value):
-            raise ValueError('Password must contain at least one uppercase letter')
-        if not any(char.islower() for char in value):
-            raise ValueError('Password must contain at least one lowercase letter')
-        if not any(char in '+-*^&' for char in value):
-            raise ValueError('Password must contain at least one special character (+, -, *, ^, &)')
-        return value
-
-    @field_validator('phone_number')
-    def phone_number_length(cls, value):
-        if not (8 <= len(value) <= 10):
-            raise ValueError('Phone number must be between 8 and 10 digits long')
-        return value
+    phone_number: str = Field(min_length=8, max_length=10, pattern=r'^\d{8,10}$')
 
 
 class UserUpdate(BaseModel):
     email: EmailStr
-    phone_number: str = constr(min_length=8, max_length=10)
+    phone_number: str = Field(min_length=8, max_length=10, pattern=r'^\d{8,10}$')
     password: str | None = None
 
     @classmethod
