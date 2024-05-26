@@ -7,11 +7,16 @@ def add_money_to_wallet(user_id: int, card_id: int, amount: float):
     wallet = find_wallet_id(user_id)
 
     card = read_query('''
-        SELECT id FROM cards WHERE id = ? AND wallet_id = ?
+        SELECT id, is_virtual FROM cards WHERE id = ? AND wallet_id = ?
     ''', (card_id, wallet.id))
 
     if not card:
-        raise HTTPException(status_code=404, detail="Card not found or does not belong to user")
+        raise HTTPException(status_code=404, detail="Card not found.")
+
+    card_id, is_virtual = card[0]
+
+    if is_virtual:
+        raise HTTPException(status_code=400, detail="Cannot add money from a virtual card.")
 
     new_amount = wallet.amount + amount
     if amount <= 0:
@@ -31,11 +36,16 @@ def withdraw_money_from_wallet(user_id: int, card_id: int, amount: float):
         raise HTTPException(status_code=400, detail="Insufficient funds in wallet")
 
     card = read_query('''
-        SELECT id FROM cards WHERE id = ? AND wallet_id = ?
+        SELECT id, is_virtual FROM cards WHERE id = ? AND wallet_id = ?
     ''', (card_id, wallet.id))
 
     if not card:
-        raise HTTPException(status_code=404, detail="Card not found or does not belong to user")
+        raise HTTPException(status_code=404, detail="Card not found.")
+
+    card_id, is_virtual = card[0]
+
+    if is_virtual:
+        raise HTTPException(status_code=400, detail="Cannot withdraw to a virtual card")
 
     new_amount = wallet.amount - amount
     if amount <= 0:

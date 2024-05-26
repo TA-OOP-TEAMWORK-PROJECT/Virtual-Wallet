@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Body, Query
 from pydantic import constr
 from fastapi.security import OAuth2PasswordRequestForm
 from common.response import *
-from data_.models import UserUpdate, AccountDetails, Token
+from data_.models import UserUpdate, AccountDetails, Token, UserCreate
 from services import user_service
 from common.auth import *
 from services.user_service import get_user_response
@@ -32,7 +32,7 @@ async def get_account_details(current_user: Annotated[User, Depends(get_current_
 
 
 @user_router.post('/register')
-def register(user_data: User):
+def register(user_data: UserCreate):
     user = user_service.create(
         user_data.username,
         user_data.password,

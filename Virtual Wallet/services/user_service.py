@@ -156,8 +156,8 @@ def get_user_contacts(user_id: int) -> list[ContactList]:
 def get_user_transactions(wallet_id: int) -> list[Transactions]:
     data = read_query(
         '''SELECT id, is_recurring, amount, status, message, recurring_period, 
-        recurring_date, transaction_date, receiver_id, category_id
-                  FROM transactions WHERE wallet_id = ?''',
+                  recurring_date, transaction_date, wallet_id, receiver_id, category_id
+           FROM transactions WHERE wallet_id = ?''',
         (wallet_id,)
     )
     return [Transactions.from_query_result(*row) for row in data]

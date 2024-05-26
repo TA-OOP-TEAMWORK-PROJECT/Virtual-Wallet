@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, EmailStr, Field, constr, conint, field_validator
 from datetime import date, datetime
 
@@ -20,7 +19,6 @@ class User(BaseModel):
 
     id: int | None = None
     username: str = Field(min_length=2, max_length=20)
-    password: str | None = None
     first_name: str = Field(max_length=45)
     last_name: str = Field(max_length=45)
     email: EmailStr                             # Valid and UNIQUE!!!!
@@ -45,6 +43,33 @@ class User(BaseModel):
 
     def is_admin(self):
         return self.role == Role.ADMIN
+
+
+class UserCreate(BaseModel):
+    username: str = Field(min_length=2, max_length=20)
+    password: str = constr(min_length=8, pattern=r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[+\-*^&]).+$')
+    first_name: str = Field(max_length=45)
+    last_name: str = Field(max_length=45)
+    email: EmailStr
+    phone_number: str = constr(min_length=8, max_length=10)
+
+    @field_validator('password')
+    def password_complexity(cls, value):
+        if not any(char.isdigit() for char in value):
+            raise ValueError('Password must contain at least one digit')
+        if not any(char.isupper() for char in value):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not any(char.islower() for char in value):
+            raise ValueError('Password must contain at least one lowercase letter')
+        if not any(char in '+-*^&' for char in value):
+            raise ValueError('Password must contain at least one special character (+, -, *, ^, &)')
+        return value
+
+    @field_validator('phone_number')
+    def phone_number_length(cls, value):
+        if not (8 <= len(value) <= 10):
+            raise ValueError('Phone number must be between 8 and 10 digits long')
+        return value
 
 
 class UserUpdate(BaseModel):
@@ -131,7 +156,7 @@ class Transactions(BaseModel):
     message: str | None = None
     recurring_period: int | None = None
     recurring_date: date | None = datetime.now()
-    transaction_date: date = datetime.now()
+    transaction_date: date | None = None
     wallet_id: int | None = None
     receiver_id: int | None = None
     contact_list_id: int | None = None
@@ -145,20 +170,19 @@ class Transactions(BaseModel):
 
     @classmethod
     def from_query_result(cls, id: int, is_recurring: bool, amount: float,
-                          status: str, message: str|None, transaction_date: date,
-                          recurring_date: date|None, wallet_id: int|None,
-                          receiver_id: int|None, contact_list_id: int = None, category_id: int | None = None):
-
+                          status: str, message: str | None, recurring_period: int | None,
+                          recurring_date: date | None, transaction_date: date,
+                          wallet_id: int | None, receiver_id: int | None, category_id: int | None):
         return cls(id=id,
-                   is_recurring= cls.validate_recurring_state(is_recurring),
+                   is_recurring=cls.validate_recurring_state(is_recurring),
                    amount=amount,
                    status=status,
                    message=message,
-                   transaction_date=transaction_date,
+                   recurring_period=recurring_period,
                    recurring_date=recurring_date,
+                   transaction_date=transaction_date,
                    wallet_id=wallet_id,
                    receiver_id=receiver_id,
-                   contact_list_id=contact_list_id,
                    category_id=category_id)
 
     @classmethod  # TODO
