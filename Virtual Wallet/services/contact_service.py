@@ -119,33 +119,30 @@ def add_user_to_contacts(user_id: int, contact_username: str) -> ContactList:
     return ContactList(id=contact_id, user_id=user_id, contact_id=contact_user.id)
 
 
-def add_external_contact(user_id: int, contact_data: ExternalContacts) -> ContactList:
-    existing_external_user = read_query(
-        '''SELECT id FROM contact_list WHERE user_id = ? AND external_user_id = ?''',
-        (user_id, contact_data.iban))
-
-    if existing_external_user:
-        external_user_id = existing_external_user[0][0]
-    else:
-        external_user_id = insert_query(
-            '''INSERT INTO external_user (contact_name, contact_email, iban) VALUES (?, ?, ?)''',
-            (contact_data.contact_name, contact_data.contact_email, contact_data.iban))
-
+def add_external_user_to_contacts(user_id: int, contact_data: ExternalContacts) -> ContactList:
     existing_contact = read_query(
-        '''SELECT id FROM contact_list WHERE user_id = ? AND external_user_id = ?''',
-        (user_id, external_user_id))
+        '''SELECT id FROM contact_list WHERE user_id = ? AND external_user_id IN 
+           (SELECT id FROM external_user WHERE contact_email = ? AND iban = ?)''',
+        (user_id, contact_data.contact_email, contact_data.iban)
+    )
 
     if existing_contact:
-        raise HTTPException(status_code=400, detail="External contact already exists")
+        raise HTTPException(status_code=400, detail="External contact already exists in your contact list")
+
+    external_user_id = insert_query(
+        '''INSERT INTO external_user (contact_name, contact_email, iban) VALUES (?, ?, ?)''',
+        (contact_data.contact_name, contact_data.contact_email, contact_data.iban)
+    )
 
     contact_id = insert_query(
         '''INSERT INTO contact_list (user_id, external_user_id) VALUES (?, ?)''',
-        (user_id, external_user_id))
+        (user_id, external_user_id)
+    )
 
     return ContactList(id=contact_id, user_id=user_id, external_user_id=external_user_id)
 
 
-def remove_contact(user_id: int, removed_user_id: int) -> bool:
+def remove_from_contacts(user_id: int, removed_user_id: int) -> bool:
     internal_contact = read_query('''
         SELECT cl.id
         FROM contact_list cl

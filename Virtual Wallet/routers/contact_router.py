@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Body, Query
-from pydantic import constr
-
+from pydantic import constr, Field
+import asyncio
 from common.response import *
 from data_.models import UserUpdate, AccountDetails, ExternalContacts
 from services import contact_service
 from common.auth import *
-from services.contact_service import view_user_contacts, add_user_to_contacts, add_external_contact, get_username_by, remove_contact
+from services.contact_service import view_user_contacts, add_user_to_contacts, get_username_by, \
+    remove_from_contacts, add_external_user_to_contacts
 
 contact_router = APIRouter(prefix='/contacts', tags=["Contacts"])
 
@@ -38,7 +39,7 @@ async def add_external_contact(
     current_user: Annotated[User, Depends(get_current_active_user)],
     contact_data: ExternalContacts
 ):
-    contact = add_external_contact(current_user.id, contact_data)
+    contact = add_external_user_to_contacts(current_user.id, contact_data)
     return contact
 
 
@@ -47,7 +48,7 @@ async def remove_contact(
     current_user: Annotated[User, Depends(get_current_active_user)],
     removed_user_id: int
 ):
-    success = remove_contact(current_user.id, removed_user_id)
+    success = remove_from_contacts(current_user.id, removed_user_id)
     if success:
         return "Contact removed successfully."
     else:

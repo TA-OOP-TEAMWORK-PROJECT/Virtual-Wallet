@@ -270,9 +270,9 @@ class ConfirmationResponse(BaseModel):
 
 class ExternalContacts(BaseModel):
     id: int | None = None
-    contact_name: str | constr(min_length=2, max_length=100) = None
+    contact_name: str = Field(min_length=2, max_length=100) or None
     contact_email: EmailStr | None = None
-    iban: str | constr(min_length=15, max_length=34) = None
+    iban: str = Field(min_length=15, max_length=34) or None
 
     @classmethod
     def from_query_result(cls, id: int, contact_name: str = None, contact_email: EmailStr = None, iban: str = None):

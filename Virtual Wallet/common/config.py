@@ -1,6 +1,6 @@
 
 DB_USER = 'root'
-DB_PASSWORD = 'your_password'
+DB_PASSWORD = 'b0t1ick0'
 DB_HOST = 'localhost'
 DB_PORT = 3306
 DB_NAME = 'virtual_wallet'
