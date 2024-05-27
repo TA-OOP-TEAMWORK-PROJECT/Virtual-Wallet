@@ -5,10 +5,11 @@ from apscheduler.triggers.cron import CronTrigger
 
 
 from common.auth import get_current_active_user, SECRET_KEY
-from data_.models import User, UserTransfer, ExternalContacts, ConfirmationResponse, ExternalTransfer
+from data_.models import User, UserTransfer, ExternalContacts, ConfirmationResponse, ExternalTransfer, Transactions
 from services.transaction_service import user_transfer, get_transactions, sort_transactions, get_transaction_response, \
-    change_status,  bank_transfer, recurring_transactions, process_transfer, confirmation_respose, \
-    get_recuring_transactions, process_to_user_approval, in_app_transfer
+    change_status, bank_transfer, recurring_transactions, confirmation_respose, \
+    get_recuring_transactions, process_to_user_approval, in_app_transfer, process_bank_transfer, \
+    app_recurring_transaction, external_recurring_transaction
 
 transaction_router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
@@ -109,7 +110,7 @@ async def confirm_transfer(confirmation_id: str,
         pending_request = external_pending_confirmations[confirmation_id]
         if response.is_confirmed:
 
-            process_transfer(pending_request)
+            process_bank_transfer(pending_request)
             del external_pending_confirmations[confirmation_id]
             return f"You have send the amount of {pending_request.transaction_amount}"
 
@@ -118,17 +119,22 @@ async def confirm_transfer(confirmation_id: str,
             return 'The transfer was denied!'
 
 
-@transaction_router.post("/recurring/new")
-def set_recurring_transaction(current_user: Annotated[User, Depends(get_current_active_user)]):
-    #може да си сетнеш като погледнеш всички транзакции до сега които не са в приловението и да станат recurring
+@transaction_router.post("/recurring/new-in-app")
+def set_recurring_transaction(cur_transaction:Transactions,
+                            current_user: Annotated[User, Depends(get_current_active_user)]):
 
-    result = create_recurring_transaction
+    result = app_recurring_transaction(cur_transaction, current_user)
+    return result
     #get_transaction_by_id
 
-@transaction_router.put("/recurring_transactions/{transaction_id}/cancel")
-def create_recurring_transaction():
-    pass
+@transaction_router.post("/recurring/new-external")
+def set_recurring_transaction(cur_transaction:Transactions,
+                              current_user: Annotated[User, Depends(get_current_active_user)]):
 
+    result = external_recurring_transaction(cur_transaction, current_user)
+    return result
+
+#може да си сетнеш като погледнеш всички транзакции до сега които не са в приловението и да станат recurring
 
 @transaction_router.put("/{transaction_id}/amount/status")  # да сложа search - Когато юзъра си стига само до транзакцията и сетва
 def status_update(transaction_id: int, new_status: str,
@@ -136,4 +142,8 @@ def status_update(transaction_id: int, new_status: str,
 
     result = change_status(transaction_id, new_status, current_user)
     return result
+
+# @transaction_router.put("/recurring_transactions/{transaction_id}/cancel")
+# def create_recurring_transaction():
+#     pass
 

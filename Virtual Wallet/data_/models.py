@@ -153,22 +153,6 @@ class Transactions(BaseModel):
             return True
         return False
 
-    # @classmethod
-    # def from_query_result(cls, id: int, is_recurring: bool, amount: float,
-    #                       status: str, message: str | None, recurring_period: int | None,
-    #                       recurring_date: date | None, transaction_date: date,
-    #                       wallet_id: int | None, receiver_id: int | None, category_id: int | None):
-    #     return cls(id=id,
-    #                is_recurring=cls.validate_recurring_state(is_recurring),
-    #                amount=amount,
-    #                status=status,
-    #                message=message,
-    #                recurring_period=recurring_period,
-    #                recurring_date=recurring_date,
-    #                transaction_date=transaction_date,
-    #                wallet_id=wallet_id,
-    #                receiver_id=receiver_id,
-    #                category_id=category_id)
 
     @classmethod
     def from_query_result(cls,

@@ -114,21 +114,13 @@ def in_app_transfer(cur_transaction, search, cur_user): #ук търси в це
 
 def bank_transfer(ext_user, cur_transaction, current_user):
 
-    def wrapper():
-        try:
-            # external_contact = get_username_by(current_user.id, search, contact_list=True, is_external=True)[1] # da se prekrysti che i tyrsi po neshto w bazata
-
-            contact_list = get_contact_list(current_user, ext_user.contact_name) #
-
-            return contact_list
 
 
-        except HTTPException as ex:
+    contact_list = get_contact_list(current_user, ext_user.contact_name)
 
+    if contact_list is None:
 
-            return  add_external_contact(current_user.id, ext_user)
-
-    contact_list = wrapper()
+        contact_list = add_external_contact(current_user.id, ext_user)
 
 
     wallet = get_user_wallet(current_user.id)
@@ -151,7 +143,7 @@ def bank_transfer(ext_user, cur_transaction, current_user):
     return transfer_message
 
 
-def process_transfer(pending_request): #is_confirmed - в случай, че решим, че искаме да записваме отказани трансфери
+def process_bank_transfer(pending_request): #is_confirmed - в случай, че решим, че искаме да записваме отказани трансфери
 
 
     cur_user_wallet = update_query('''
@@ -161,18 +153,19 @@ def process_transfer(pending_request): #is_confirmed - в случай, че р�
                     (pending_request.new_wallet_amount, pending_request.wallet_id))
 
 
-        # cur_user_insert = insert_query('''
-        #                         INSERT INTO transactions(amount, transaction_date, wallet_id, contact_list_id)
-        #                         VALUES(?,?,?,?)''',
-        #                                    (pending_request.transaction_amount, date.today(),
-        #                                     pending_request.wallet_id, pending_request.receiver_id))
-        #
-        # transaction_id = cur_user_insert
-        # cur_user_update_status = update_query('''
-        # UPDATE transactions
-        # SET status = "confirmed"
-        # WHERE id = ?''',
-        # (cur_user_insert, ))
+    transaction_insert = insert_query('''
+                        INSERT INTO transactions(amount, status, transaction_date, wallet_id, contact_list_id)
+                        VALUES(?,?,?,?,?)''',
+                        (pending_request.transaction_amount, "confirmed", date.today(),
+                                pending_request.wallet_id, pending_request.receiver_id))
+
+
+       # transaction_id = cur_user_insert
+       #  cur_user_update_status = update_query('''
+       #  UPDATE transactions
+       #  SET status = "confirmed"
+       #  WHERE id = ?''',
+       #  (cur_user_insert, ))
 
     # else:
     #
@@ -446,8 +439,36 @@ def change_status(id, new_status, cur_user):  # trqbva li proverka za tova dali 
 
 
 
+def app_recurring_transaction(app_rec_transaction: Transactions, cur_user):
+
+    user_wallet = get_user_wallet(cur_user.id)
+    insert_query('''
+    INSERT INTO transactions(is_recurring, amount, recurring_period, 
+    recurring_date, transaction_date, wallet_id, receiver_id)
+    VALUES(?,?,?,?,?,?,?)''',
+                 (1, app_rec_transaction.amount, app_rec_transaction.recurring_period,
+                  app_rec_transaction.recurring_date, app_rec_transaction.transaction_date,
+                  user_wallet.id, app_rec_transaction.receiver_id))
+
+    transaction_list = [app_rec_transaction]
+
+    return get_transaction_response(transaction_list)
 
 
+def external_recurring_transaction(ext_rec_transaction: Transactions, cur_user):
+
+    user_wallet = get_user_wallet(cur_user.id)
+    insert_query('''
+    INSERT INTO transactions(is_recurring, amount, recurring_period, 
+    recurring_date, transaction_date, wallet_id, contact_list_id)
+    VALUES(?,?,?,?,?,?,?)''',
+                 (1, ext_rec_transaction.amount, ext_rec_transaction.recurring_period,
+                  ext_rec_transaction.recurring_date, ext_rec_transaction.transaction_date,
+                  user_wallet.id, ext_rec_transaction.contact_list_id))
+
+    transaction_list = [ext_rec_transaction]
+
+    return get_transaction_response(transaction_list)
 
 
 

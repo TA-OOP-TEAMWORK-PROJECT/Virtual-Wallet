@@ -188,5 +188,10 @@ def get_contact_list(current_user, contact_name):
     AND external_user.contact_name = ?''',
     (current_user.id, contact_name))
 
+    if not data:
+        return None
+
     id, user_id, external_user_id = data[0]
     return ContactList(id=id, user_id=user_id, external_user_id=external_user_id)
+
+
