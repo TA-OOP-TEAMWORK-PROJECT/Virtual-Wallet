@@ -181,6 +181,19 @@ class Transactions(BaseModel):
                    receiver_id=receiver_id,
                    contact_list_id=contact_list_id)
 
+    # @classmethod  # TODO
+    # def create_transaction_class(cls, id, is_recurring, amount, recurring_period, recurring_date,
+    #                              transaction_date, wallet_id, receiver_id, contact_list_id):
+    #     return cls(id=id,
+    #                is_recurring=cls.validate_recurring_state(is_recurring),
+    #                amount=amount,
+    #                recurring_period=recurring_period,
+    #                recurring_date=recurring_date,
+    #                transaction_date=transaction_date,
+    #                wallet_id=wallet_id,
+    #                receiver_id=receiver_id,
+    #                contact_list_id=contact_list_id)
+
 
 class RecurringTransaction(BaseModel):
 
@@ -210,6 +223,20 @@ class UserTransfer(BaseModel):
     username: str | None = None
     phone_number: str|None = None
     amount: float = Field(gt=0.1)
+     # transaction_date = date.today()
+
+# class TransactionHistory(BaseModel):
+#
+#     user_id: int
+#     transaction_id: int | None = None
+#     recurring_date: date = datetime.now()  # !
+#
+#     @classmethod
+#     def from_query_result(cls, user_id: int, transaction_id: int, recurring_date:date):
+#         return cls(id=id,
+#                    user_id=user_id,
+#                    transaction_id=transaction_id,
+#                    recurring_date=recurring_date)
 
 
 class Wallet(BaseModel):
@@ -310,3 +337,6 @@ class AccountDetails(BaseModel): #
     categories: list[Categories]
     contacts: list[ContactList]
     transactions: list[Transactions]
+
+
+
