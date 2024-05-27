@@ -374,7 +374,8 @@ def find_external_user_contact_list(contact_list_id: int):
     FROM external_user 
     WHERE id =?''',
     (external_user_id_data, ))
-    return next((User.from_query_result(*row) for row in external_user_data), None)
+
+    return next((User.from_query_result(*row) for row in external_user_data), None) # TODO GYRMIIIII TUUK
 
 
 
