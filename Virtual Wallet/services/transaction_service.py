@@ -118,7 +118,7 @@ def bank_transfer(ext_user, cur_transaction, current_user):
         try:
             # external_contact = get_username_by(current_user.id, search, contact_list=True, is_external=True)[1] # da se prekrysti che i tyrsi po neshto w bazata
 
-            contact_list = get_contact_list(current_user, ext_user.contact_name)
+            contact_list = get_contact_list(current_user, ext_user.contact_name) #
 
             return contact_list
 
