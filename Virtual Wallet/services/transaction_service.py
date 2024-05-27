@@ -7,50 +7,42 @@ from services.card_service import find_wallet_id
 from services.user_service import find_by_username, get_user_wallet, find_by_id, get_contact_external_user
 from services.contact_service import get_username_by, add_external_contact, get_contact_list, view_user_contacts
 
-
-def user_transfer(cur_transaction: UserTransfer, username: str, cur_user): #В бодито има само сума
- #insert in categories as well !!!!
-
-    receiver_user = find_by_username(username) # да намеря wallet_id i receiver_id
-
-    if not receiver_user:
-       return Response(status_code=404, content='There is no user with the given credentials')
-
-
+def set_wallet_amount(cur_user, cur_receiver, cur_transaction):
     wallet = get_user_wallet(cur_user.id)
-    receiver_user_wallet = get_user_wallet(receiver_user.id)
-
 
     if wallet.amount < cur_transaction.amount:
         raise HTTPException(status_code=400, detail='Insufficient funds')
 
+    receiver_user_wallet = get_user_wallet(cur_receiver.id)
 
     wallet.amount -= cur_transaction.amount
     receiver_user_wallet.amount += cur_transaction.amount
 
-    is_friend = check_contact_list(cur_user.id, receiver_user.id)
+    return wallet, receiver_user_wallet
+def user_transfer(cur_transaction: UserTransfer, cur_receiver, cur_user, is_in_contacts): #В бодито има само сума #insert in categories as well !!!!
 
-#transaction_id v transfer_message
-    transfer_message = TransferConfirmation(new_wallet_amount=wallet.amount,
-                                            receiver_wallet_amount=receiver_user_wallet.amount,
+
+    cur_user_wallet, receiver_wallet = set_wallet_amount(cur_user, cur_receiver, cur_transaction)
+
+
+    transfer_message = TransferConfirmation(new_wallet_amount=cur_user_wallet.amount,
+                                            receiver_wallet_amount=receiver_wallet.amount,
                                             transaction_amount=cur_transaction.amount,
                                             transaction_date=date.today(),
-                                            wallet_id=wallet.id,
-                                            receiver_wallet_id=receiver_user_wallet.id,
+                                            wallet_id=cur_user_wallet.id,
+                                            receiver_wallet_id=receiver_wallet.id,
                                             user_id=cur_user.id,
-                                            receiver_id=receiver_user.id,
+                                            receiver_id=cur_receiver.id,
                                             is_external=False)
 
-    if is_friend:
+    if is_in_contacts:
         return transfer_to_user(transfer_message)
 
-
-
     else:
-
         return transfer_message
 
 def transfer_to_user(transfer_message): # TODO ako prieme statusa samo se dobavq i t.n.
+
 
 
     cur_user_insert = insert_query('''
@@ -59,41 +51,31 @@ def transfer_to_user(transfer_message): # TODO ako prieme statusa samo se dobavq
     (transfer_message.transaction_amount, date.today(),
                 transfer_message.wallet_id, transfer_message.receiver_id))
 
-    receiver_user_insert = insert_query('''
-    INSERT INTO transactions(amount, transaction_date, wallet_id, receiver_id)
-    VALUES(?,?,?,?)''',
-    (transfer_message.transaction_amount, date.today(),
-                transfer_message.receiver_wallet_id, transfer_message.receiver_id))
 
-
-    cur_user_wallet = update_query('''
+    user_wallet = update_query('''
     UPDATE wallet
     SET amount = ?
     WHERE user_id = ?''',
-   (transfer_message.new_wallet_amount, transfer_message.user_id))
+    (transfer_message.new_wallet_amount, transfer_message.user_id))
 
 
     receiver_user_wallet = update_query('''
     UPDATE wallet
     SET amount = ?
     WHERE user_id = ?''',
-   (transfer_message.receiver_wallet_amount, transfer_message.receiver_id))
+    (transfer_message.receiver_wallet_amount, transfer_message.receiver_id))
 
     id_user_transaction = cur_user_insert
     status_update_cur_user = update_query('''
     UPDATE transactions
     SET status = "confirmed"
     WHERE id = ?''',
-     (id_user_transaction, ))
+    (id_user_transaction, ))
 
-    id_receiver = receiver_user_insert
-    status_update_cur_user = update_query('''
-    UPDATE transactions
-    SET status = "confirmed"
-    WHERE id = ?''',
-     (id_receiver, ))
 
     raise HTTPException(status_code=200, detail=f'The amount of {transfer_message.transaction_amount} was sent.')
+
+
 
 def check_contact_list(sender_id, receiver_id):
 
@@ -110,19 +92,32 @@ def check_contact_list(sender_id, receiver_id):
         return True
     return False
 
-def new_transfer(cur_transaction, search, cur_user): #ук търси в целия апп/ ако искаме директно през контакт лист си имаме @transaction_router.post("/{username}")
+def in_app_transfer(cur_transaction, search, cur_user): #ук търси в целия апп/ ако искаме директно през контакт лист си имаме @transaction_router.post("/{username}")
 
-     receiver_username = get_username_by(cur_user.id, search, contact_list=False)[1]
+    cur_receiver_data = read_query('''
+                SELECT id, username, first_name, last_name,
+                email, phone_number, role, hashed_password, is_blocked  
+                FROM users
+                WHERE email LIKE ?
+                OR username LIKE ?
+                OR phone_number LIKE ?''',
+                (f'%{search}%', f'%{search}%', f'%{search}%'))
 
-     return user_transfer(cur_transaction, receiver_username, cur_user)
+    if cur_receiver_data is None:
+        return Response(status_code=404, content='There is no user with the given credentials')
+
+    cur_receiver = User.from_query_result(*cur_receiver_data[0])
+    is_in_contacts = check_contact_list(cur_user.id, cur_receiver.id)
+
+    return user_transfer(cur_transaction, cur_receiver, cur_user, is_in_contacts)
 
 
 def bank_transfer(ext_user, cur_transaction, current_user):
-    search = ext_user.iban
 
     def wrapper():
         try:
-            external_contact = get_username_by(current_user.id, search, contact_list=True, is_external=True)[1] # da se prekrysti che i tyrsi po neshto w bazata
+            # external_contact = get_username_by(current_user.id, search, contact_list=True, is_external=True)[1] # da se prekrysti che i tyrsi po neshto w bazata
+
             contact_list = get_contact_list(current_user, ext_user.contact_name)
 
             return contact_list
@@ -159,31 +154,29 @@ def bank_transfer(ext_user, cur_transaction, current_user):
 def process_transfer(pending_request): #is_confirmed - в случай, че решим, че искаме да записваме отказани трансфери
 
 
-
-    if pending_request.is_external:
-        cur_user_wallet = update_query('''
-                              UPDATE wallet
-                              SET amount = ?
-                              WHERE id = ?''',
-                                       (pending_request.new_wallet_amount, pending_request.wallet_id))
+    cur_user_wallet = update_query('''
+                    UPDATE wallet
+                    SET amount = ?
+                    WHERE id = ?''',
+                    (pending_request.new_wallet_amount, pending_request.wallet_id))
 
 
-        cur_user_insert = insert_query('''
-                                INSERT INTO transactions(amount, transaction_date, wallet_id, contact_list_id)
-                                VALUES(?,?,?,?)''',
-                                           (pending_request.transaction_amount, date.today(),
-                                            pending_request.wallet_id, pending_request.receiver_id))
+        # cur_user_insert = insert_query('''
+        #                         INSERT INTO transactions(amount, transaction_date, wallet_id, contact_list_id)
+        #                         VALUES(?,?,?,?)''',
+        #                                    (pending_request.transaction_amount, date.today(),
+        #                                     pending_request.wallet_id, pending_request.receiver_id))
+        #
+        # transaction_id = cur_user_insert
+        # cur_user_update_status = update_query('''
+        # UPDATE transactions
+        # SET status = "confirmed"
+        # WHERE id = ?''',
+        # (cur_user_insert, ))
 
-        transaction_id = cur_user_insert
-        cur_user_update_status = update_query('''
-        UPDATE transactions
-        SET status = "confirmed"
-        WHERE id = ?''',
-        (cur_user_insert, ))
-
-    else:
-
-        result = transfer_to_user(pending_request)
+    # else:
+    #
+    #     result = transfer_to_user(pending_request)
 
 def get_recuring_transactions(search_by, search): #search e data, ako tyrsim vsichki tranzakcii ili user_id ako samo na 1 user
 
@@ -258,7 +251,6 @@ def recurring_transactions():
             SET recurring_date = ?
             WHERE id = ?''',
             (cur_transaction.recurring_date, cur_transaction.id))
-
 
 
 
@@ -370,40 +362,15 @@ def find_external_user_contact_list(contact_list_id: int):
     return next((User.from_query_result(*row) for row in external_user_data), None) # TODO GYRMIIIII TUUK
 
 
-
-
-def change_status(id, new_status): #trqbva li proverka za tova dali ima takava tranzakciq i za user-a// zaz tova dali e validna proverkata
-
-    transaction = get_transaction_by_id(id)
-
-    if not transaction.status == new_status:
-
-        update_query('''
-        UPDATE transactions
-        SET status = ?
-        WHERE id = ?''',
-        (new_status, id))
-
-        if new_status == 'denied': # да сменя статуса за двамата в базата
-            return Response(status_code=200, content='You denied the transaction')
-        return Response(status_code=200, content='You confirmed the transaction')
-
-    else:
-        return Response(status_code=400, content='Not supported operation')
-
-
-
-def get_transaction_by_id(id):
+def get_transaction_by_id(id:int ):
 
     data = read_query('''
-    SELECT id, is_recurring, amount, status, message, transaction_date, recurring_date, wallet_id, receiver_id
+    SELECT id, is_recurring, status, amount, transaction_date, receiver_id, contact_list_id, recurring_date
     FROM transactions
     WHERE id = ?''',
     (id, ))
 
-    # id, is_recurring, amount, status, message, transaction_date, recurring_date, wallet_id, receiver_id = data[0]
-
-    return Transactions.from_query_result(*data[0])
+    return Transactions.get_transactions_query(*data[0])
 
 def get_wallet_by_id(wallet_id):
 
@@ -428,6 +395,64 @@ def confirmation_respose(pending_transaction, name):
         "Date of payment": date.today(),
         "Receiver": name
     }
+def process_to_user_approval(request):
+
+    data = insert_query('''
+    INSERT INTO transactions(amount, transaction_date, wallet_id, receiver_id)
+    VALUES(?,?,?,?)''',
+    (request.transaction_amount, request.transaction_date, request.wallet_id, request.receiver_id))
+
+
+def change_status(id, new_status, cur_user):  # trqbva li proverka za tova dali ima takava tranzakciq i za user-a//
+
+    transaction = get_transaction_by_id(id)
+
+    if transaction.status == new_status:
+        return Response(status_code=400, content='Not supported operation')
+
+
+    update_query('''
+        UPDATE transactions
+        SET status = ?
+        WHERE id = ?''',
+        (new_status, id))
+
+    if new_status == 'denied':
+        return Response(status_code=200, content='You denied the transaction')
+
+
+    cur_receiver = find_by_id(transaction.receiver_id)
+    cur_user_wallet, receiver_wallet = set_wallet_amount(cur_user, cur_receiver,
+                                                         UserTransfer(amount=transaction.amount))
+
+    user_wallet = update_query('''
+            UPDATE wallet
+            SET amount = ?
+            WHERE user_id = ?''',
+            (cur_user_wallet.amount, cur_user.id))
+
+    receiver_user_wallet = update_query('''
+            UPDATE wallet
+            SET amount = ?
+            WHERE user_id = ?''',
+            (receiver_wallet.amount, cur_receiver.id))
+
+    insert_query('''
+    INSERT INTO contact_list(user_id, contact_id)  
+    VALUES(?,?)''',
+    (cur_user.id, transaction.receiver_id))
+
+    return 'The transaction was approved'
+
+
+
+
+
+
+
+
+
+
     # new_wallet_amount = wallet.amount,
     # transaction_amount = cur_transaction.amount,
     # transaction_date = date.today(),

@@ -43,7 +43,7 @@ def find_by_username(username: str) -> User | None:
 def find_by_phone_number(phone_number: str) :
     data = read_query(
         '''SELECT id, username, first_name, last_name,
-            email, phone_number, role, is_blocked
+            email, phone_number, role, hashed_password, is_blocked
             FROM users WHERE phone_number = ?''',
             (phone_number, ))
 

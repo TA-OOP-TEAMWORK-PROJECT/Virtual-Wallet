@@ -7,13 +7,14 @@ from apscheduler.triggers.cron import CronTrigger
 from common.auth import get_current_active_user, SECRET_KEY
 from data_.models import User, UserTransfer, ExternalContacts, ConfirmationResponse, ExternalTransfer
 from services.transaction_service import user_transfer, get_transactions, sort_transactions, get_transaction_response, \
-    change_status, new_transfer, bank_transfer, recurring_transactions, process_transfer, confirmation_respose, \
-    get_recuring_transactions
+    change_status,  bank_transfer, recurring_transactions, process_transfer, confirmation_respose, \
+    get_recuring_transactions, process_to_user_approval, in_app_transfer
 
 transaction_router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
 scheduler = BackgroundScheduler()
-pending_confirmations: Dict[str, Dict] = {}
+external_pending_confirmations: Dict[str, Dict] = {}
+internal_pending_confirmations: Dict[str, Dict] = {}
 
 
 
@@ -68,14 +69,13 @@ def new_user_transaction(cur_transaction: UserTransfer,
                            search: str,
                            current_user: Annotated[User, Depends(get_current_active_user)]):
 
-    transfer_message = new_transfer(cur_transaction, search, current_user)
+    transfer_message = in_app_transfer(cur_transaction, search, current_user)
 
-    confirmation_id = len(pending_confirmations) + 1
-    pending_confirmations[confirmation_id] = transfer_message
+    confirmation_id = "INTERNAL" + str(len(internal_pending_confirmations) + 1)
+    internal_pending_confirmations[confirmation_id] = transfer_message
 
     return {"confirmation_id": confirmation_id, "message": "Please confirm the transaction:",
-            "transaction":confirmation_respose(pending_confirmations[confirmation_id], current_user.username)}
-
+            "transaction": confirmation_respose(internal_pending_confirmations[confirmation_id], current_user.username)}
 
 
 @transaction_router.post("/new_transaction/bank_transfer")
@@ -85,38 +85,37 @@ def create_bank_transfer(ext_user: ExternalContacts,
 
     transfer_message = bank_transfer(ext_user, cur_transfer, current_user)
 
-    confirmation_id = len(pending_confirmations) + 1
-    pending_confirmations[confirmation_id] = transfer_message
+    confirmation_id = "EXTERNAL" + str(len(external_pending_confirmations) + 1)
+    external_pending_confirmations[confirmation_id] = transfer_message
 
     return {"confirmation_id": confirmation_id, "message": "Please confirm the transaction:",
-            "transaction": confirmation_respose(pending_confirmations[confirmation_id], ext_user.contact_name)}
+            "transaction": confirmation_respose(external_pending_confirmations[confirmation_id], ext_user.contact_name)}
 
 
 @transaction_router.post("/transfer-confirmation/{confirmation_id}")
-async def confirm_transfer(confirmation_id: int,
+async def confirm_transfer(confirmation_id: str,
                            response: ConfirmationResponse):
 
-    if confirmation_id not in pending_confirmations:
+    if confirmation_id not in external_pending_confirmations and confirmation_id not in internal_pending_confirmations:
         raise HTTPException(status_code=404, detail="Confirmation ID not found")
 
-
-    pending_request = pending_confirmations[confirmation_id]
-
-    # Check if the user confirmed the action
-    if response.is_confirmed:
-        # Process the money transfer (mock implementation)
-
-        process_transfer(pending_request)   # изпращам заедно с информацията за трансфера за да бъде добавен към базата данни информацията е в модела при всички случай
-
-        # Remove the confirmed request from the pending list TODO
-        del pending_confirmations[confirmation_id]
-        return f"You have send the amount of {pending_request.transaction_amount}"
+    if "INTERNAL" in confirmation_id: #Ima INTERNAL, zashtoto inache tuk ]e se byrka ako e samo cifri
+        pending_request = internal_pending_confirmations[confirmation_id]
+        process_to_user_approval(pending_request)
+        del internal_pending_confirmations[confirmation_id]
+        return "Transaction is processed and awaits approval from the user"
 
     else:
-        del pending_confirmations[confirmation_id]
-        return 'The transfer was denied!'
+        pending_request = external_pending_confirmations[confirmation_id]
+        if response.is_confirmed:
 
+            process_transfer(pending_request)
+            del external_pending_confirmations[confirmation_id]
+            return f"You have send the amount of {pending_request.transaction_amount}"
 
+        else:
+            del external_pending_confirmations[confirmation_id]
+            return 'The transfer was denied!'
 
 
 @transaction_router.post("/recurring/new")
@@ -126,15 +125,15 @@ def set_recurring_transaction(current_user: Annotated[User, Depends(get_current_
     result = create_recurring_transaction
     #get_transaction_by_id
 
+@transaction_router.put("/recurring_transactions/{transaction_id}/cancel")
+def create_recurring_transaction():
+    pass
+
 
 @transaction_router.put("/{transaction_id}/amount/status")  # да сложа search - Когато юзъра си стига само до транзакцията и сетва
 def status_update(transaction_id: int, new_status: str,
                   current_user: Annotated[User, Depends(get_current_active_user)]):
 
-    result = change_status(transaction_id, new_status)
+    result = change_status(transaction_id, new_status, current_user)
     return result
 
-
-@transaction_router.put("/recurring_transactions/{transaction_id}/cancel")
-def create_recurring_transaction():
-    pass

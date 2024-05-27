@@ -32,6 +32,7 @@ class User(BaseModel):
     @classmethod
     def from_query_result(cls, id: int, username: str, first_name: str, last_name: str, email: str,
                           phone_number: str, role, hashed_password, is_blocked):
+
         return cls(id=id,
                    username=username,
                    first_name=first_name,
@@ -41,6 +42,7 @@ class User(BaseModel):
                    hashed_password=hashed_password,
                    role=role,
                    is_blocked=is_blocked)
+
 
     def is_admin(self):
         return self.role == Role.ADMIN
