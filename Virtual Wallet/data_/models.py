@@ -19,6 +19,7 @@ class User(BaseModel):
 
     id: int | None = None
     username: str = Field(min_length=2, max_length=20)
+    password: str | None = None
     first_name: str = Field(min_length=1, max_length=45)
     last_name: str = Field(min_length=1, max_length=45)
     email: EmailStr                             # Valid and UNIQUE!!!!
@@ -57,7 +58,7 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     email: EmailStr
     phone_number: str = Field(min_length=8, max_length=10, pattern=r'^\d{8,10}$')
-    password: str | None = None
+    password: str = Field(min_length=8, max_length=20) or None
 
     @classmethod
     def from_user(cls, user: User):

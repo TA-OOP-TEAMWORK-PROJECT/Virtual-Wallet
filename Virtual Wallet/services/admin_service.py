@@ -78,7 +78,8 @@ def get_all_transactions(page: int = 1,
     offset = (page - 1) * page_size
 
     sql_query = '''
-    SELECT id, is_recurring, amount, status, message, transaction_date, recurring_date, wallet_id, receiver_id
+    SELECT id, is_recurring, amount, status, message, recurring_period, recurring_date, transaction_date,
+     wallet_id, receiver_id, category_id
     FROM transactions
     WHERE 1=1
     '''
