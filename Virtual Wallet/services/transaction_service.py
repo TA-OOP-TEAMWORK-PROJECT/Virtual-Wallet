@@ -282,7 +282,7 @@ def get_transactions(user: User, search):
             search = datetime.strptime(search, date_format)
 
         except:
-            search = find_by_username(search)
+            search = find_by_username(search) #
 
         data = read_query('''
         SELECT id, is_recurring, status, amount, transaction_date, receiver_id, contact_list_id, recurring_date
