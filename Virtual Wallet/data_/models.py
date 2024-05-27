@@ -138,8 +138,8 @@ class Transactions(BaseModel):
     status: str = Field(default=Status.PENDING, description="Transaction status, e.g., 'pending', 'confirmed', 'denied'")
     message: str | None = None
     recurring_period: int | None = None
-    recurring_date: date | None = datetime.now()
-    transaction_date: date | None = None
+    recurring_date: date | None = None
+    transaction_date: date | None = None #bez None
     wallet_id: int | None = None
     receiver_id: int | None = None
     contact_list_id: int | None = None
@@ -151,48 +151,58 @@ class Transactions(BaseModel):
             return True
         return False
 
-    @classmethod
-    def from_query_result(cls, id: int, is_recurring: bool, amount: float,
-                          status: str, message: str | None, recurring_period: int | None,
-                          recurring_date: date | None, transaction_date: date,
-                          wallet_id: int | None, receiver_id: int | None, category_id: int | None):
-        return cls(id=id,
-                   is_recurring=cls.validate_recurring_state(is_recurring),
-                   amount=amount,
-                   status=status,
-                   message=message,
-                   recurring_period=recurring_period,
-                   recurring_date=recurring_date,
-                   transaction_date=transaction_date,
-                   wallet_id=wallet_id,
-                   receiver_id=receiver_id,
-                   category_id=category_id)
-
-    @classmethod  # TODO
-    def create_transaction_class(cls, id, is_recurring, amount, recurring_period, recurring_date,
-                                 transaction_date, wallet_id, receiver_id, contact_list_id):
-        return cls(id=id,
-                   is_recurring=cls.validate_recurring_state(is_recurring),
-                   amount=amount,
-                   recurring_period=recurring_period,
-                   recurring_date=recurring_date,
-                   transaction_date=transaction_date,
-                   wallet_id=wallet_id,
-                   receiver_id=receiver_id,
-                   contact_list_id=contact_list_id)
-
-    # @classmethod  # TODO
-    # def create_transaction_class(cls, id, is_recurring, amount, recurring_period, recurring_date,
-    #                              transaction_date, wallet_id, receiver_id, contact_list_id):
+    # @classmethod
+    # def from_query_result(cls, id: int, is_recurring: bool, amount: float,
+    #                       status: str, message: str | None, recurring_period: int | None,
+    #                       recurring_date: date | None, transaction_date: date,
+    #                       wallet_id: int | None, receiver_id: int | None, category_id: int | None):
     #     return cls(id=id,
     #                is_recurring=cls.validate_recurring_state(is_recurring),
     #                amount=amount,
+    #                status=status,
+    #                message=message,
     #                recurring_period=recurring_period,
     #                recurring_date=recurring_date,
     #                transaction_date=transaction_date,
     #                wallet_id=wallet_id,
     #                receiver_id=receiver_id,
-    #                contact_list_id=contact_list_id)
+    #                category_id=category_id)
+
+    @classmethod
+    def from_query_result(cls,
+                          id:int, is_recurring:bool, status:str, amount:float,
+                          transaction_date:date, wallet_id, receiver_id = None, contact_list_id =None, recurring_date= None,
+                           recurring_period = None, category_id = None, message = None
+                          ):
+
+        return cls(id=id,
+                   is_recurring=cls.validate_recurring_state(is_recurring),
+                   status=status,
+                   amount=amount,
+                   transaction_date=transaction_date,
+                   receiver_id=receiver_id,
+                   wallet_id=wallet_id,
+                   contact_list_id=contact_list_id,
+                   recurring_date=recurring_date,
+                   recurring_period=recurring_period,
+                   category_id=category_id,
+                   message=message)
+
+    @classmethod
+    def get_transactions_query(cls, id, is_recurring, status, amount,
+                               transaction_date, receiver_id, contact_list_id, recurring_date=None):
+
+        return cls(
+            id=id,
+            is_recurring=is_recurring,
+            status=status,
+            amount=amount,
+            transaction_date=transaction_date,
+            receiver_id=receiver_id,
+            contact_list_id=contact_list_id,
+            recurring_date=recurring_date
+        )
+
 
 
 class RecurringTransaction(BaseModel):
@@ -337,6 +347,3 @@ class AccountDetails(BaseModel): #
     categories: list[Categories]
     contacts: list[ContactList]
     transactions: list[Transactions]
-
-
-

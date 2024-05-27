@@ -43,7 +43,7 @@ def view_transactions(current_user: Annotated[User, Depends(get_current_active_u
 
     result = get_transactions(current_user, search)
 
-    if sort and (sort == 'asc' or sort == 'desc'):
+    if sort_by and (sort == 'asc' or sort == 'desc'):
         result = sort_transactions(result, sort_by, is_reverse=sort == 'desc')
 
     return get_transaction_response(result)

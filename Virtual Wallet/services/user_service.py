@@ -40,6 +40,27 @@ def find_by_username(username: str) -> User | None:
     return next((User.from_query_result(*row) for row in data), None)
 
 
+def find_by_phone_number(phone_number: str) :
+    data = read_query(
+        '''SELECT id, username, first_name, last_name,
+            email, phone_number, role, is_blocked
+            FROM users WHERE phone_number = ?''',
+            (phone_number, ))
+
+    return next((User.from_query_result(*row) for row in data), None)
+
+
+
+def find_by_id(user_id: int) -> User: #
+    data = read_query(
+        '''SELECT id, username, first_name, last_name,
+                  email, phone_number, role, hashed_password, is_blocked
+                  FROM users WHERE id = ?''',
+        (user_id,)
+    )
+    return next((User.from_query_result(*row) for row in data), None)
+
+
 def get_user_response(user):
 
     return {
@@ -110,14 +131,7 @@ def get_user_account_details(user_id: int) -> AccountDetails:  #  Дали мо�
     )
 
 
-def find_by_id(user_id: int) -> User: #
-    data = read_query(
-        '''SELECT id, username, first_name, last_name,
-                  email, phone_number, role, hashed_password, is_blocked
-                  FROM users WHERE id = ?''',
-        (user_id,)
-    )
-    return next((User.from_query_result(*row) for row in data), None)
+
 
 
 def get_user_cards(wallet_id: int) -> list[Card]:
@@ -156,8 +170,18 @@ def get_user_contacts(user_id: int) -> list[ContactList]:
     )
     return [ContactList.from_query_result(*row) for row in data]
 
+def get_contact_external_user(contact_list_id:int):
+    data = read_query(
+        '''SELECT e.id, e.contact_name, e.contact_email, e.iban
+                FROM external_user e
+                JOIN contact_list c 
+                WHERE c.id = 16
+                AND e.id = c.external_user_id''',
+        (contact_list_id, ))
 
-def get_user_transactions(wallet_id: int) -> list[Transactions]:
+    return [ExternalContacts.from_query_result(*row) for row in data][0]
+
+def get_user_transactions(wallet_id: int) -> list[Transactions]:  # тук излизат само тези, които са изпратени от юзъра TODO
     data = read_query(
         '''SELECT id, is_recurring, amount, status, message, recurring_period, 
                   recurring_date, transaction_date, wallet_id, receiver_id, category_id
@@ -192,3 +216,5 @@ def password_check(password: str) -> str:
     if not any(char in '+-*^&' for char in password):
         raise HTTPException(status_code=400, detail='Password must contain at least one special character (+, -, *, ^, &)')
     return password
+
+
