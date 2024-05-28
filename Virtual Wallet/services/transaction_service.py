@@ -4,8 +4,8 @@ from fastapi import Response, HTTPException
 from data_.database import insert_query, update_query, read_query
 from data_.models import UserTransfer, User, Transactions, RecurringTransaction, Wallet, TransferConfirmation
 from services.card_service import find_wallet_id
-from services.user_service import find_by_username, get_user_wallet, find_by_id, get_contact_external_user
-from services.contact_service import get_username_by, add_external_contact, get_contact_list, view_user_contacts
+from services.user_service import find_by_username, get_user_wallet, find_by_id
+from services.contact_service import get_username_by, add_external_user_to_contacts, get_contact_list, view_user_contacts
 
 def set_wallet_amount(cur_user, cur_receiver, cur_transaction):
     wallet = get_user_wallet(cur_user.id)
@@ -38,7 +38,10 @@ def user_transfer(cur_transaction: UserTransfer, cur_receiver, cur_user, is_in_c
     if is_in_contacts:
         return transfer_to_user(transfer_message)
 
+
+
     else:
+
         return transfer_message
 
 def transfer_to_user(transfer_message): # TODO ako prieme statusa samo se dobavq i t.n.
@@ -120,6 +123,9 @@ def bank_transfer(ext_user, cur_transaction, current_user):
 
     if contact_list is None:
 
+            return add_external_user_to_contacts(current_user.id, ext_user)
+
+    contact_list = wrapper()
         contact_list = add_external_contact(current_user.id, ext_user)
 
 
@@ -288,8 +294,19 @@ def get_transactions(user: User, search):
 def sort_transactions(transactions_list, sort_by, is_reverse):
 
     # transactions_list = [Transactions.from_query_result(i) for i in transactions_list]
+    updated_transaction_list = []
+    for data in transactions_list:
+
+        id, is_recurring, amount, status, message, transaction_date, recurring_date, wallet_id, receiver_id, contact_list_id = data
+
+        updated_transaction_list.append(Transactions.from_query_result
+                                        (id, is_recurring, amount, status,
+                                         message, transaction_date, recurring_date,
+                                         wallet_id, receiver_id, contact_list_id))
 
     sorted_transactions = None
+    if not sort_by:
+        sorted_transactions = sorted(updated_transaction_list, reverse=is_reverse)
 
     if sort_by == 'transaction_date':
         sorted_transactions = sorted(transactions_list, key=lambda x: x.transaction_date, reverse=is_reverse)
