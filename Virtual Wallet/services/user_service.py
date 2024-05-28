@@ -131,9 +131,6 @@ def get_user_account_details(user_id: int) -> AccountDetails:  #  Дали мо�
     )
 
 
-
-
-
 def get_user_cards(wallet_id: int) -> list[Card]:
     data = read_query(
         '''SELECT id, number, exp_date, cardholder_name, cvv, wallet_id, is_virtual

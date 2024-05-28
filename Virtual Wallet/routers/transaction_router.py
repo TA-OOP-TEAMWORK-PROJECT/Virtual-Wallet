@@ -5,11 +5,13 @@ from apscheduler.triggers.cron import CronTrigger
 
 
 from common.auth import get_current_active_user, SECRET_KEY
-from data_.models import User, UserTransfer, ExternalContacts, ConfirmationResponse, ExternalTransfer, Transactions
+from data_.models import User, UserTransfer, ExternalContacts, ConfirmationResponse, ExternalTransfer, Transactions, \
+    RecurringTransaction
 from services.transaction_service import user_transfer, get_transactions, sort_transactions, get_transaction_response, \
     change_status, bank_transfer, recurring_transactions, confirmation_respose, \
     get_recuring_transactions, process_to_user_approval, in_app_transfer, process_bank_transfer, \
     app_recurring_transaction, external_recurring_transaction
+from services.user_service import find_by_username
 
 transaction_router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
@@ -61,7 +63,8 @@ def view_recurring_transaction(current_user: Annotated[User, Depends(get_current
 def transfer_to_user(cur_transaction: UserTransfer, username: str,
                         current_user: Annotated[User, Depends(get_current_active_user)]):
 
-    result = user_transfer(cur_transaction, username, current_user)
+    receiver = find_by_username(username)
+    result = user_transfer(cur_transaction, receiver, current_user, True)
     return result
 
 
@@ -119,19 +122,22 @@ async def confirm_transfer(confirmation_id: str,
             return 'The transfer was denied!'
 
 
-@transaction_router.post("/recurring/new-in-app")
-def set_recurring_transaction(cur_transaction:Transactions,
+@transaction_router.post("/recurring/new-external")
+def set_external_recurring_transaction(transaction: RecurringTransaction,
+                              contact: ExternalContacts,
                             current_user: Annotated[User, Depends(get_current_active_user)]):
 
-    result = app_recurring_transaction(cur_transaction, current_user)
+    result = external_recurring_transaction(transaction, contact, current_user)
     return result
     #get_transaction_by_id
 
-@transaction_router.post("/recurring/new-external")
-def set_recurring_transaction(cur_transaction:Transactions,
+@transaction_router.post("/recurring/new-in-app")
+def set_app_recurring_transaction(transaction: RecurringTransaction,
+                              contact: UserTransfer,
                               current_user: Annotated[User, Depends(get_current_active_user)]):
 
-    result = external_recurring_transaction(cur_transaction, current_user)
+    result = app_recurring_transaction(transaction, contact, current_user)
+
     return result
 
 #може да си сетнеш като погледнеш всички транзакции до сега които не са в приловението и да станат recurring

@@ -2,11 +2,14 @@ from datetime import date, datetime, timedelta
 from typing import Annotated
 from fastapi import Response, HTTPException
 from data_.database import insert_query, update_query, read_query
-from data_.models import UserTransfer, User, Transactions, RecurringTransaction, Wallet, TransferConfirmation
+from data_.models import UserTransfer, User, Transactions, RecurringTransaction, Wallet, TransferConfirmation, \
+    ExternalContacts
 from routers.contact_router import add_external_contact
 from services.card_service import find_wallet_id
 from services.user_service import find_by_username, get_user_wallet, find_by_id, get_contact_external_user
-from services.contact_service import get_username_by, add_external_user_to_contacts, get_contact_list, view_user_contacts
+from services.contact_service import get_username_by, add_external_user_to_contacts, get_contact_list, \
+    view_user_contacts, add_user_to_contacts, get_user_contact_list
+
 
 def set_wallet_amount(cur_user, cur_receiver, cur_transaction):
     wallet = get_user_wallet(cur_user.id)
@@ -440,57 +443,65 @@ def change_status(id, new_status, cur_user):  # trqbva li proverka za tova dali 
 
 
 
-def app_recurring_transaction(app_rec_transaction: Transactions, cur_user):
+def external_recurring_transaction(ext_rec_transaction: RecurringTransaction,
+                                   contact: ExternalContacts,  cur_user):
+
+    transaction_contact = get_contact_list(cur_user, contact.contact_name)
+
+    if not transaction_contact:
+        transaction_contact = add_external_user_to_contacts(cur_user.id, contact)
 
     user_wallet = get_user_wallet(cur_user.id)
+
+    if user_wallet.amount < ext_rec_transaction.amount:
+        raise HTTPException(status_code=400, detail='"Not enough funds to complete the transaction')
+
     insert_query('''
-    INSERT INTO transactions(is_recurring, amount, recurring_period, 
-    recurring_date, transaction_date, wallet_id, receiver_id)
-    VALUES(?,?,?,?,?,?,?)''',
-                 (1, app_rec_transaction.amount, app_rec_transaction.recurring_period,
-                  app_rec_transaction.recurring_date, app_rec_transaction.transaction_date,
-                  user_wallet.id, app_rec_transaction.receiver_id))
-
-    transaction_list = [app_rec_transaction]
-
-    return get_transaction_response(transaction_list)
-
-
-def external_recurring_transaction(ext_rec_transaction: Transactions, cur_user):
-
-    user_wallet = get_user_wallet(cur_user.id)
-    insert_query('''
-    INSERT INTO transactions(is_recurring, amount, recurring_period, 
+    INSERT INTO transactions(is_recurring, amount, status, recurring_period, 
     recurring_date, transaction_date, wallet_id, contact_list_id)
-    VALUES(?,?,?,?,?,?,?)''',
-                 (1, ext_rec_transaction.amount, ext_rec_transaction.recurring_period,
+    VALUES(?,?,?,?,?,?,?,?)''',
+                 (1, ext_rec_transaction.amount, "confirmed", ext_rec_transaction.recurring_period,
                   ext_rec_transaction.recurring_date, ext_rec_transaction.transaction_date,
-                  user_wallet.id, ext_rec_transaction.contact_list_id))
-
-    transaction_list = [ext_rec_transaction]
-
-    return get_transaction_response(transaction_list)
+                  user_wallet.id, transaction_contact.id))
 
 
+    return {"You have set a new recurring transaction:":{
+              "Contact name is": contact.contact_name,
+              "Transaction amount": ext_rec_transaction.amount,
+              "Payment period is": ext_rec_transaction.recurring_period,
+               "Next payment day": ext_rec_transaction.recurring_date
+    }}
 
 
-
-    # new_wallet_amount = wallet.amount,
-    # transaction_amount = cur_transaction.amount,
-    # transaction_date = date.today(),
-    # wallet_id = wallet.id,
-    # receiver_id = contact_list.id,
-    # is_external = True)
+def app_recurring_transaction(transaction, receiver_transaction_data: UserTransfer, cur_user):
 
 
+    transaction_contact = get_user_contact_list(cur_user, receiver_transaction_data.username)
+
+    if not transaction_contact:
+        transaction_contact = add_user_to_contacts(cur_user.id, receiver_transaction_data.username)
+
+    user_wallet = get_user_wallet(cur_user.id)
+
+    if user_wallet.amount < receiver_transaction_data.amount:
+        raise HTTPException(status_code=400, detail='"Not enough funds to complete the transaction')
 
 
+    insert_query('''
+    INSERT INTO transactions(is_recurring, amount, status, recurring_period, 
+    recurring_date, transaction_date, wallet_id, receiver_id)
+    VALUES(?,?,?,?,?,?,?,?)''',
+                 (1, transaction.amount, "confirmed", transaction.recurring_period,
+                  transaction.recurring_date, transaction.transaction_date,
+                  user_wallet.id, transaction.contact_list_id))
 
 
-
-
-
-
+    return {"You have set a new recurring transaction:":{
+              "Contact name is": receiver_transaction_data.username,
+              "Transaction amount": transaction.amount,
+              "Payment period is": transaction.recurring_period,
+               "Next payment day": transaction.recurring_date
+    }}
 
 
 

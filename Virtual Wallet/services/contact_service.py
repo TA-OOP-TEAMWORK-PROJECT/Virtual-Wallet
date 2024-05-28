@@ -174,7 +174,7 @@ def remove_from_contacts(user_id: int, removed_user_id: int) -> bool:
     return True
 
 
-def get_contact_list(current_user, contact_name):
+def get_contact_list(current_user, contact_name): # Само за external TODO
 
     data = read_query('''
     SELECT contact_list.id, user_id, external_user_id
@@ -192,3 +192,19 @@ def get_contact_list(current_user, contact_name):
     return ContactList(id=id, user_id=user_id, external_user_id=external_user_id)
 
 
+def get_user_contact_list(current_user, username):
+
+    data = read_query('''
+    SELECT c.id, c.user_id, c.contact_id
+    FROM contact_list c
+    JOIN users u
+    ON u.id = c.contact_id
+    WHERE c.user_id = ?
+    AND u.username = ?''',
+    (current_user.id, username))
+
+    if not data:
+        return None
+
+    id, user_id, external_user_id = data[0]
+    return ContactList(id=id, user_id=user_id, external_user_id=external_user_id)
