@@ -175,7 +175,7 @@ def get_contact_external_user(contact_list_id:int):
         '''SELECT e.id, e.contact_name, e.contact_email, e.iban
                 FROM external_user e
                 JOIN contact_list c 
-                WHERE c.id = 16
+                WHERE c.id = ?
                 AND e.id = c.external_user_id''',
         (contact_list_id, ))
 
