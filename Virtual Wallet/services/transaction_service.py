@@ -355,7 +355,7 @@ def find_external_user_contact_list(contact_list_id: int):
     return next((User.from_query_result(*row) for row in external_user_data), None) # TODO GYRMIIIII TUUK
 
 
-def get_transaction_by_id(id:int ):
+def get_transaction_by_id(id:int ): #
 
     data = read_query('''
     SELECT id, is_recurring, status, amount, transaction_date, receiver_id, contact_list_id, recurring_date
