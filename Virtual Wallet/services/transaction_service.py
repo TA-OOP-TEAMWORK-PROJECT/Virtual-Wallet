@@ -8,7 +8,7 @@ from routers.contact_router import add_external_contact
 from services.card_service import find_wallet_id
 from services.user_service import find_by_username, get_user_wallet, find_by_id, get_contact_external_user
 from services.contact_service import get_username_by, add_external_user_to_contacts, get_contact_list, \
-    view_user_contacts, add_user_to_contacts, get_user_contact_list
+    view_user_contacts, get_user_contact_list, add_user_to_contacts
 
 
 def set_wallet_amount(cur_user, cur_receiver, cur_transaction):
@@ -289,6 +289,47 @@ def get_transactions(user: User, search):
 
 
 
+
+def view_all_recuring_transactions(user):
+
+    user_wallet = get_user_wallet(user.id)
+
+    data = read_query('''
+    SELECT id, amount, recurring_period, recurring_date, transaction_date, wallet_id, 
+    CASE 
+    WHEN contact_list_id IS NULL THEN receiver_id 
+    ELSE contact_list_id 
+    END AS contact_or_receiver
+    FROM transactions
+    WHERE (wallet_id = ? OR receiver_id = ?) 
+    AND is_recurring = 1''',
+    (user_wallet.id, user_wallet.id))
+
+    return take_response(data)
+
+def take_response(data):
+    class_results = [RecurringTransaction.from_query_result(*i) for i in data]
+
+    result = {}
+    for key, value in enumerate(class_results):
+        result[key + 1]= {
+            "Amount": value.amount,
+            "Status": value.status,
+            "Date of next transfer": value.recurring_date,
+            "Last transfer date": value.transaction_date,
+        }
+
+    return result
+
+
+
+
+
+
+
+
+
+
 def sort_transactions(transactions_list, sort_by, is_reverse):
 
     # transactions_list = [Transactions.from_query_result(i) for i in transactions_list]
@@ -488,10 +529,10 @@ def app_recurring_transaction(transaction, receiver_transaction_data: UserTransf
 
 
     insert_query('''
-    INSERT INTO transactions(is_recurring, amount, status, recurring_period, 
+    INSERT INTO transactions(is_recurring, amount, recurring_period, 
     recurring_date, transaction_date, wallet_id, receiver_id)
-    VALUES(?,?,?,?,?,?,?,?)''',
-                 (1, transaction.amount, "confirmed", transaction.recurring_period,
+    VALUES(?,?,?,?,?,?,?)''',
+                 (1, transaction.amount, transaction.recurring_period,
                   transaction.recurring_date, transaction.transaction_date,
                   user_wallet.id, transaction.contact_list_id))
 

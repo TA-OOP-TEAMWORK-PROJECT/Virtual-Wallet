@@ -189,19 +189,21 @@ class Transactions(BaseModel):
             recurring_date=recurring_date
         )
 
+
+
 class RecurringTransaction(Transactions):
 
     # id: int | None = None
     # amount: float
-    # recurring_period: int | None
-    # recurring_date: date | None
-    # transaction_date: date = date.today()
+    # recurring_period: int | None = None
+    # recurring_date: date | None = datetime.now()
+    # transaction_date: date = datetime.now()
     # wallet_id: int | None = None
-    # contact_id: int|None = None
+    # contact_list_id: int
 
     @classmethod
     def from_query_result(cls, id: int, amount: float, recurring_period: int,
-                          recurring_date: date|None, transaction_date: date, wallet_id: int|None, contact_list_id:int|None):
+                          recurring_date: date|None, transaction_date: date, wallet_id: int|None, contact_list_id:int):
 
         return cls(id=id,
                    amount=amount,

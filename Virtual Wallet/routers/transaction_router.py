@@ -10,7 +10,7 @@ from data_.models import User, UserTransfer, ExternalContacts, ConfirmationRespo
 from services.transaction_service import user_transfer, get_transactions, sort_transactions, get_transaction_response, \
     change_status, bank_transfer, recurring_transactions, confirmation_respose, \
     get_recuring_transactions, process_to_user_approval, in_app_transfer, process_bank_transfer, \
-    app_recurring_transaction, external_recurring_transaction
+    app_recurring_transaction, external_recurring_transaction, view_all_recuring_transactions
 from services.user_service import find_by_username
 
 transaction_router = APIRouter(prefix="/transactions", tags=["Transactions"])
@@ -29,9 +29,7 @@ async def startup_event():
 
     recurring_transactions()
 
-    scheduler.start() #
-
-
+    scheduler.start()
 
 
 @transaction_router.on_event("shutdown")
@@ -55,8 +53,7 @@ def view_transactions(current_user: Annotated[User, Depends(get_current_active_u
 @transaction_router.get("/recurring")
 def view_recurring_transaction(current_user: Annotated[User, Depends(get_current_active_user)]):
 
-    result = get_recuring_transactions("User", current_user)
-    return result
+    return view_all_recuring_transactions(current_user)
 
 
 @transaction_router.post("/{username}")
@@ -103,7 +100,7 @@ async def confirm_transfer(confirmation_id: str,
     if confirmation_id not in external_pending_confirmations and confirmation_id not in internal_pending_confirmations:
         raise HTTPException(status_code=404, detail="Confirmation ID not found")
 
-    if "INTERNAL" in confirmation_id: #Ima INTERNAL, zashtoto inache tuk ]e se byrka ako e samo cifri
+    if "INTERNAL" in confirmation_id:
         pending_request = internal_pending_confirmations[confirmation_id]
         process_to_user_approval(pending_request)
         del internal_pending_confirmations[confirmation_id]
