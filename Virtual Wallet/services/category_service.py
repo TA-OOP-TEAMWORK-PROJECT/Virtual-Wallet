@@ -26,12 +26,17 @@ def view_categories(user_id: int) -> list[Categories]:
     return [Categories.from_query_result(*row) for row in data]
 
 
-def link_transaction_to_category(transaction_id: int, category_id: int):
-    transaction = read_query('SELECT id FROM transactions WHERE id = ?', (transaction_id,))
-    category = read_query('SELECT id FROM categories WHERE id = ?', (category_id,))
+def link_transaction_to_category(user_id: int, transaction_id: int, category_id: int) -> str:
+    transaction = read_query('''
+        SELECT id 
+        FROM transactions 
+        WHERE id = ? AND (receiver_id = ? OR wallet_id = (SELECT id FROM wallet WHERE user_id = ?))
+    ''', (transaction_id, user_id, user_id))
 
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found.")
+
+    category = read_query('SELECT id FROM categories WHERE id = ? AND user_id = ?', (category_id, user_id))
 
     if not category:
         raise HTTPException(status_code=404, detail="Category not found.")

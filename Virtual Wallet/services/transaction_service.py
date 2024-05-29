@@ -7,7 +7,7 @@ from data_.models import UserTransfer, User, Transactions, RecurringTransaction,
 from routers.contact_router import add_external_contact
 from services.card_service import find_wallet_id
 from services.user_service import find_by_username, get_user_wallet, find_by_id, get_contact_external_user
-from services.contact_service import get_username_by, add_external_user_to_contacts, get_contact_list, \
+from services.contact_service import add_external_user_to_contacts, get_contact_list, \
     view_user_contacts, get_user_contact_list, add_user_to_contacts
 
 
@@ -378,7 +378,10 @@ def get_transaction_response(transactions_list):
 
         else:
             external_receiver = get_contact_external_user(value.contact_list_id)
-            transactions[key + 1]["Send to"] = f"{external_receiver.contact_name}"
+            if external_receiver:
+                transactions[key + 1]["Send to"] = f"{external_receiver.contact_name}"
+            else:
+                transactions[key + 1]["Send to"] = "Removed external contact"
 
     return transactions
 

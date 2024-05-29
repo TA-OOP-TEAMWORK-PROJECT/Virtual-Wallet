@@ -153,26 +153,26 @@ class Transactions(BaseModel):
             return True
         return False
 
-
     @classmethod
-    def from_query_result(cls,
-                          id:int, is_recurring:bool, status:str, amount:float,
-                          transaction_date:date, wallet_id, receiver_id = None, contact_list_id =None, recurring_date= None,
-                           recurring_period = None, category_id = None, message = None
-                          ):
-
-        return cls(id=id,
-                   is_recurring=cls.validate_recurring_state(is_recurring),
-                   status=status,
-                   amount=amount,
-                   transaction_date=transaction_date,
-                   receiver_id=receiver_id,
-                   wallet_id=wallet_id,
-                   contact_list_id=contact_list_id,
-                   recurring_date=recurring_date,
-                   recurring_period=recurring_period,
-                   category_id=category_id,
-                   message=message)
+    def from_query_result(cls, id: int, is_recurring: bool, amount: float,
+                          status: str, message: str | None, recurring_period: int | None,
+                          recurring_date: date | None, transaction_date: date,
+                          wallet_id: int | None, receiver_id: int | None, contact_list_id: int | None = None,
+                          category_id: int | None = None):
+        return cls(
+            id=id,
+            is_recurring=cls.validate_recurring_state(is_recurring),
+            amount=amount,
+            status=status,
+            message=message,
+            recurring_period=recurring_period,
+            recurring_date=recurring_date,
+            transaction_date=transaction_date,
+            wallet_id=wallet_id,
+            receiver_id=receiver_id,
+            contact_list_id=contact_list_id,
+            category_id=category_id
+        )
 
     @classmethod
     def get_transactions_query(cls, id, is_recurring, status, amount,
@@ -298,7 +298,7 @@ class ExternalContacts(BaseModel):
     iban: str = Field(min_length=15, max_length=34) or None
 
     @classmethod
-    def from_query_result(cls, id: int, contact_name: str = None, contact_email: EmailStr = None, iban: str = None):
+    def from_query_result(cls, id: int = None, contact_name: str = None, contact_email: EmailStr = None, iban: str = None):
         return cls(id=id, contact_name=contact_name, contact_email=contact_email, iban=iban)
 
 

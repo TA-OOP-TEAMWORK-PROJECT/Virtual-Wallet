@@ -112,7 +112,7 @@ async def confirm_transfer(confirmation_id: str,
 
             process_bank_transfer(pending_request)
             del external_pending_confirmations[confirmation_id]
-            return f"You have send the amount of {pending_request.transaction_amount}"
+            return f"You have sent the amount of {pending_request.transaction_amount}"
 
         else:
             del external_pending_confirmations[confirmation_id]
