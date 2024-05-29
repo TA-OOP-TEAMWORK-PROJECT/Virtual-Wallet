@@ -144,7 +144,7 @@ def bank_transfer(ext_user, cur_transaction, current_user):
                                             is_external=True)
 
 
-    return transfer_message
+    return transfer_message #
 
 
 def process_bank_transfer(pending_request): #is_confirmed - в случай, че решим, че искаме да записваме отказани трансфери
