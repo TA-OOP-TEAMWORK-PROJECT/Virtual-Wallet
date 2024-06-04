@@ -3,11 +3,11 @@ from typing import Annotated
 from fastapi import Response, HTTPException
 from data_.database import insert_query, update_query, read_query
 from data_.models import UserTransfer, User, Transactions, RecurringTransaction, Wallet, TransferConfirmation, \
-    ExternalContacts
+    ExternalContacts, Status
 from routers.contact_router import add_external_contact
 from services.card_service import find_wallet_id
 from services.user_service import find_by_username, get_user_wallet, find_by_id, get_contact_external_user
-from services.contact_service import get_username_by, add_external_user_to_contacts, get_contact_list, \
+from services.contact_service import add_external_user_to_contacts, get_contact_list, \
     view_user_contacts, get_user_contact_list, add_user_to_contacts
 
 
@@ -378,7 +378,10 @@ def get_transaction_response(transactions_list):
 
         else:
             external_receiver = get_contact_external_user(value.contact_list_id)
-            transactions[key + 1]["Send to"] = f"{external_receiver.contact_name}"
+            if external_receiver:
+                transactions[key + 1]["Send to"] = f"{external_receiver.contact_name}"
+            else:
+                transactions[key + 1]["Send to"] = "Removed external contact"
 
     return transactions
 
@@ -444,7 +447,9 @@ def process_to_user_approval(request):
 def change_status(id, new_status, cur_user):  # trqbva li proverka za tova dali ima takava tranzakciq i za user-a//
 
     transaction = get_transaction_by_id(id)
-
+    if transaction.status == Status.DENIED:
+        return HTTPException(status_code=405, detail='You can not accept denied transaction!')
+    
     if transaction.status == new_status:
         return Response(status_code=400, content='Not supported operation')
 

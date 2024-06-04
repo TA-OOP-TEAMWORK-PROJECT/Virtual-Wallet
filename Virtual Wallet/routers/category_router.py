@@ -23,9 +23,8 @@ async def create_category(
 
 
 @category_router.post("/{category_id}/transactions/{transaction_id}")
-async def link_transaction(
+async def link_transaction(current_user: Annotated[User, Depends(get_current_active_user)],
     transaction_id: int,
     category_id: int,
-    current_user: Annotated[User, Depends(get_current_active_user)]
 ):
-    return category_service.link_transaction_to_category(transaction_id, category_id)
+    return category_service.link_transaction_to_category(current_user.id, transaction_id, category_id)

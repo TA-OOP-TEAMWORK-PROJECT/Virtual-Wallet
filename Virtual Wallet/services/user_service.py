@@ -168,6 +168,8 @@ def get_user_contacts(user_id: int) -> list[ContactList]:
     return [ContactList.from_query_result(*row) for row in data]
 
 def get_contact_external_user(contact_list_id:int):
+    if contact_list_id is None:
+        return None
     data = read_query(
         '''SELECT e.id, e.contact_name, e.contact_email, e.iban
                 FROM external_user e
@@ -175,13 +177,15 @@ def get_contact_external_user(contact_list_id:int):
                 WHERE c.id = ?
                 AND e.id = c.external_user_id''',
         (contact_list_id, ))
+    if not data:
+        return None
 
     return [ExternalContacts.from_query_result(*row) for row in data][0]
 
 def get_user_transactions(wallet_id: int) -> list[Transactions]:  # тук излизат само тези, които са изпратени от юзъра TODO
     data = read_query(
         '''SELECT id, is_recurring, amount, status, message, recurring_period, 
-                  recurring_date, transaction_date, wallet_id, receiver_id, category_id
+                  recurring_date, transaction_date, wallet_id, receiver_id, contact_list_id, category_id
            FROM transactions WHERE wallet_id = ?''',
         (wallet_id,)
     )
