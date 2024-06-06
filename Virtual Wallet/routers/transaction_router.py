@@ -64,7 +64,7 @@ def transfer_to_user(cur_transaction: UserTransfer, username: str,
     return result
 
 
-@transaction_router.post("/new_transaction/in_app")
+@transaction_router.post("/new_transaction/in_app") #
 def new_user_transaction(cur_transaction: UserTransfer,
                            search: str,
                            current_user: Annotated[User, Depends(get_current_active_user)]):
