@@ -1,10 +1,8 @@
 from datetime import date, datetime, timedelta
-from typing import Annotated
 from fastapi import Response, HTTPException
 from data_.database import insert_query, update_query, read_query
 from data_.models import UserTransfer, User, Transactions, RecurringTransaction, Wallet, TransferConfirmation, \
     ExternalContacts, Status
-from routers.contact_router import add_external_contact
 from services.card_service import find_wallet_id
 from services.user_service import find_by_username, get_user_wallet, find_by_id, get_contact_external_user
 from services.contact_service import add_external_user_to_contacts, get_contact_list, \

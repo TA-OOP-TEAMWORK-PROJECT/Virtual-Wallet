@@ -26,8 +26,7 @@ internal_pending_confirmations: Dict[str, Dict] = {}
 async def startup_event():
 
     cron_trigger = CronTrigger(hour=12, minute=0)
-
-    recurring_transactions()
+    scheduler.add_job(recurring_transactions, cron_trigger)
 
     scheduler.start()
 

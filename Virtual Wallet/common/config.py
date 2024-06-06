@@ -1,10 +1,11 @@
 
 DB_USER = 'root'
-DB_PASSWORD = 'b0t1ick0'
-DB_HOST = 'localhost'
+DB_PASSWORD = '2[_K88PER]oV'
+DB_HOST = 'host.docker.internal'
 DB_PORT = 3306
 DB_NAME = 'virtual_wallet'
 
+#'host.docker.internal'
 
 MAILJET_API_KEY = 'acd66a47abcaf2331d2ded115e91d07a'
 MAILJET_API_SECRET = '9a62384f893c70718918e66c7fd89a48'
