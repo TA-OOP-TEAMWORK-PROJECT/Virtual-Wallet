@@ -107,7 +107,7 @@ def test_update_user_profile_no_changes(mocker):
     assert message == "No changes detected."
 
 
-def test_get_user_account_details(mocker):
+def test_get_user_account_details(mocker): #
     user_data = [(1, 'username', 'First', 'Last', 'email@example.com', '1234567890', 'user', 'hashed_password', False)]
     wallet_data = [(1, 100.0, 1)]
     card_data = [(1, '4242424242424242', '2025-01-01', 'First Last', '123', 1, False)]
