@@ -31,7 +31,7 @@ The system allows users to manage their virtual wallet, perform transactions, vi
 
 ## Features
 
-##Public Part
+## *Public Part*
 
 ### **User Endpoints**
 
@@ -67,7 +67,7 @@ Form data:
 }
 ```
 
-##Registered Users
+## *Registered Users*
 
 **View User Profile**
 - Requires authentication.
@@ -544,7 +544,7 @@ Headers:
 Authorization: Bearer <token>
 ```
 
-##Administrative Part
+## *Administrative Part*
 
 ## **Admin Endpoints**
 
@@ -652,7 +652,7 @@ Headers:
 Authorization: Bearer <admin_token>
 ```
 
-## Optional Features
+## *Optional Features*
 
 ## **Financial News Endpoints**
 
