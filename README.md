@@ -3,13 +3,33 @@
 ## Project Description:
 This project aims to create a secure and efficient Virtual Wallet System backend using FastAPI, offering a modern RESTful API for various client applications.
 
-## **High-level description:**
+## Table of Contents
+- [Project Structure](#project-structure)
+- [Database Schema](#database-schema)
+- [Setup and Run Instructions](#setup-and-run-instructions)
+- [Features](#features)
+  - [Public Part](#public-part)
+  - [Endpoints for Registered Users](#endpoints-for-registered-users)
+  - [Administrative Part](#administrative-part)
+  - [Optional Features](#optional-features)
+- [Technologies Used](#technologies-used)
+- [Links](#links)
+
+## **Project Structure:**
 The system allows users to manage their virtual wallet, perform transactions, view transaction history, manage cards and contacts, and access financial news.
 
 ## **Database Schema**
-![database_schema](#) <!-- Add a link to your database schema image -->
+![finaldatabase](https://github.com/TA-OOP-TEAMWORK-PROJECT/Virtual-Wallet/assets/156197933/082f2a84-daa1-481d-80a7-45572179cd59)
+
+## Setup and Run Instructions
+1. Clone the repository.
+2. Run the database scripts to create and populate the database.
+3. Configure the application settings (e.g., database connection, email service).
+4. Run the application.
 
 ## **Rest assured, the API meets modern standards and offers a comprehensive set of functionalities, including:**
+
+## Features
 
 ### **User Endpoints**
 
@@ -663,4 +683,5 @@ Host: 127.0.0.1:8000
 pip install fastapi passlib jose mariadb pydantic starlette pytest pytest-aiohttp pytest-asyncio httpx
 ```
 
-
+## Links
+- [Swagger Documentation]([(http://127.0.0.1:8001/redoc)])
