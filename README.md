@@ -25,7 +25,8 @@ The system allows users to manage their virtual wallet, perform transactions, vi
 1. Clone the repository.
 2. Run the database scripts to create and populate the database.
 3. Configure the application settings (e.g., database connection, email service).
-4. Run the application.
+4. Check the [Required Packages](#required-packages) section for further instructions.
+5. Run the application.
 
 ## **Rest assured, the API meets modern standards and offers a comprehensive set of functionalities, including:**
 
