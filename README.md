@@ -18,15 +18,16 @@ This project aims to create a secure and efficient Virtual Wallet System backend
 ## **Project Structure:**
 The Virtual Wallet system is a comprehensive application designed to simplify financial management for users. It offers a robust set of features that allow users to manage their virtual wallets, perform various types of transactions, view transaction history, manage cards and contacts, and access the latest financial news.
 
+
+
 ### **Project Overview:**
-The Virtual Wallet project aims to provide an easy-to-use platform for managing personal finances. In today's fast-paced world, having a reliable and secure method for handling transactions and tracking expenses is crucial. This application caters to that need by offering a digital solution that is both powerful and user-friendly.
 
-### **Importance:**
-- **Convenience:** Users can manage their finances from anywhere, at any time.
-- **Security:** The application uses state-of-the-art security measures, including OAuth2 authentication and encrypted data storage, to ensure user data is protected.
-- **Efficiency:** Streamlined processes for sending and receiving money, managing cards, and organizing transactions make financial management more efficient.
+| **Project Information** | **Diagram** |
+|:---|:---:|
+| <div style="text-align: left; width: 600px;">The Virtual Wallet project aims to provide an easy-to-use platform for managing personal finances. In today's fast-paced world, having a reliable and secure method for handling transactions and tracking expenses is crucial. This application caters to that need by offering a digital solution that is both powerful and user-friendly. The project was developed with the primary goal of simplifying financial management for users of all ages and technical backgrounds. By providing a comprehensive suite of tools and features, the Virtual Wallet ensures that users can stay on top of their finances with minimal effort.<br/><br/> **Importance:** <br/> - **Convenience:** Users can manage their finances from anywhere, at any time. The application's intuitive interface makes it easy for users to perform transactions, track expenses, and manage their accounts on the go. <br/> - **Security:** The application uses state-of-the-art security measures, including OAuth2 authentication and encrypted data storage, to ensure user data is protected. This commitment to security helps build trust with users and ensures their sensitive information is safe from unauthorized access. <br/> - **Efficiency:** Streamlined processes for sending and receiving money, managing cards, and organizing transactions make financial management more efficient. Users can quickly and easily handle their financial tasks, freeing up time for other important activities.<br/><br/> **Background:** <br/> This project was developed by Snezhana Petrova, Nikolay Stankov & Simeon Hristov, aiming to create a reliable and efficient financial management tool. The team focused on incorporating best practices in software development, including the use of modern frameworks and libraries, ensuring the application is maintainable and scalable. </div> | <img src="https://github.com/TA-OOP-TEAMWORK-PROJECT/Web-Project/assets/156197933/dc951363-153b-467e-a1d8-8c401acf806c" alt="Diagram" width="1400"/> |
 
-### **Key Features:**
+**Key Features:**
+
 - **User Management:** Users can register, login, and update their profiles. Admins can approve registrations and manage user accounts.
 - **Card Management:** Users can add, view, update, and delete their credit/debit cards. Virtual cards can be used for online purchases.
 - **Transactions:** Users can perform transactions within the app, including sending money to other users, transferring funds between their own accounts, and making bank transfers.
@@ -35,22 +36,26 @@ The Virtual Wallet project aims to provide an easy-to-use platform for managing 
 - **Financial News:** Users can stay updated with the latest financial news and top cryptocurrency prices.
 - **Administrative Tools:** Admins can manage users, approve transactions, and oversee the application's operations.
 
-### **Background:**
-This project was developed by Snezhana Petrova, Nikolay Stankov & Simeon Hristov, aiming to create a reliable and efficient financial management tool. The team focused on incorporating best practices in software development, including the use of modern frameworks and libraries, ensuring the application is maintainable and scalable.
+**Why Use This Project:**
 
-### **Why Use This Project:**
 - **Free to Use:** The application is open-source and free for anyone to use.
 - **User-Friendly:** The intuitive interface makes it easy for users of all tech-savviness levels to manage their finances.
 - **Comprehensive Functionality:** From basic transactions to detailed financial news, the application covers all aspects of personal finance management.
 
-### **Interesting Functionality:**
+**Interesting Functionality:**
+
 - **Secure Authentication:** Uses OAuth2 for secure login and token-based authentication.
 - **Virtual Cards for Online Purchases:** Users can create and use virtual cards specifically for online transactions, enhancing security.
 - **Financial News Integration:** Provides real-time updates on financial news and cryptocurrency prices.
 - **Recurring Transactions:** Automates regular payments, reducing the need for manual intervention.
 
-### **Conclusion:**
+**Conclusion:**
+
 The Virtual Wallet application is a testament to the possibilities of digital financial management. With its comprehensive feature set, robust security measures, and user-friendly design, it is an invaluable tool for anyone looking to streamline their financial activities.
+
+
+
+
 
 ## **Database Schema**
 ![finaldatabase](https://github.com/TA-OOP-TEAMWORK-PROJECT/Virtual-Wallet/assets/156197933/082f2a84-daa1-481d-80a7-45572179cd59)
