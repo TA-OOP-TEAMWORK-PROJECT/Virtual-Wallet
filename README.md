@@ -1,4 +1,4 @@
-# **Virtual Wallet Backend with FastAPI**
+# **PayTheBills**
 
 ## Project Description:
 This project aims to create a secure and efficient Virtual Wallet System backend using FastAPI, offering a modern RESTful API for various client applications.
@@ -16,7 +16,41 @@ This project aims to create a secure and efficient Virtual Wallet System backend
 - [Links](#links)
 
 ## **Project Structure:**
-The system allows users to manage their virtual wallet, perform transactions, view transaction history, manage cards and contacts, and access financial news.
+The Virtual Wallet system is a comprehensive application designed to simplify financial management for users. It offers a robust set of features that allow users to manage their virtual wallets, perform various types of transactions, view transaction history, manage cards and contacts, and access the latest financial news.
+
+### **Project Overview:**
+The Virtual Wallet project aims to provide an easy-to-use platform for managing personal finances. In today's fast-paced world, having a reliable and secure method for handling transactions and tracking expenses is crucial. This application caters to that need by offering a digital solution that is both powerful and user-friendly.
+
+### **Importance:**
+- **Convenience:** Users can manage their finances from anywhere, at any time.
+- **Security:** The application uses state-of-the-art security measures, including OAuth2 authentication and encrypted data storage, to ensure user data is protected.
+- **Efficiency:** Streamlined processes for sending and receiving money, managing cards, and organizing transactions make financial management more efficient.
+
+### **Key Features:**
+- **User Management:** Users can register, login, and update their profiles. Admins can approve registrations and manage user accounts.
+- **Card Management:** Users can add, view, update, and delete their credit/debit cards. Virtual cards can be used for online purchases.
+- **Transactions:** Users can perform transactions within the app, including sending money to other users, transferring funds between their own accounts, and making bank transfers.
+- **Recurring Transactions:** Users can set up and manage recurring transactions for regular payments.
+- **Contact Management:** Users can maintain a list of contacts to streamline transactions with frequent recipients.
+- **Financial News:** Users can stay updated with the latest financial news and top cryptocurrency prices.
+- **Administrative Tools:** Admins can manage users, approve transactions, and oversee the application's operations.
+
+### **Background:**
+This project was developed by Snezhana Petrova, Nikolay Stankov & Simeon Hristov, aiming to create a reliable and efficient financial management tool. The team focused on incorporating best practices in software development, including the use of modern frameworks and libraries, ensuring the application is maintainable and scalable.
+
+### **Why Use This Project:**
+- **Free to Use:** The application is open-source and free for anyone to use.
+- **User-Friendly:** The intuitive interface makes it easy for users of all tech-savviness levels to manage their finances.
+- **Comprehensive Functionality:** From basic transactions to detailed financial news, the application covers all aspects of personal finance management.
+
+### **Interesting Functionality:**
+- **Secure Authentication:** Uses OAuth2 for secure login and token-based authentication.
+- **Virtual Cards for Online Purchases:** Users can create and use virtual cards specifically for online transactions, enhancing security.
+- **Financial News Integration:** Provides real-time updates on financial news and cryptocurrency prices.
+- **Recurring Transactions:** Automates regular payments, reducing the need for manual intervention.
+
+### **Conclusion:**
+The Virtual Wallet application is a testament to the possibilities of digital financial management. With its comprehensive feature set, robust security measures, and user-friendly design, it is an invaluable tool for anyone looking to streamline their financial activities.
 
 ## **Database Schema**
 ![finaldatabase](https://github.com/TA-OOP-TEAMWORK-PROJECT/Virtual-Wallet/assets/156197933/082f2a84-daa1-481d-80a7-45572179cd59)
@@ -28,8 +62,6 @@ The system allows users to manage their virtual wallet, perform transactions, vi
 4. Check the [Required Packages](#required-packages) section for further instructions.
 5. Run the application.
 
-## **Rest assured, the API meets modern standards and offers a comprehensive set of functionalities, including:**
-
 ## Features
 
 ## *Public Part*
@@ -38,17 +70,18 @@ The system allows users to manage their virtual wallet, perform transactions, vi
 
 **Register User**
 - Accepts user registration data.
-- Ensures that at least one user property is unique for login purposes.
+- Username, email, phone number must be unique.
+- Password needs to contain at least one digit, one uppercase, one lowercase, a special character and can't be less than 8 symbols long.
 
 ```http
 POST /users/register HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 JSON body:
 {
     "username": "name",
     "password": "password",
-    "email": "samplemail@someting.com",
+    "email": "user@example.com",
     "first_name": "first_name",
     "last_name": "last_name",
     "phone_number": "123456789"
@@ -57,9 +90,10 @@ JSON body:
 
 **Login User**
 - Authenticates user and returns a token.
+
 ```http
 POST /users/login HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Form data:
 {
@@ -76,10 +110,18 @@ Form data:
 
 ```http
 GET /users/ HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
+
+JSON response:
+{
+  "Username": "string",
+  "Name": "string",
+  "Email": "user@example.com",
+  "Phone Number": "123456789"
+}
 ```
 
 **Get Account Details**
@@ -89,20 +131,47 @@ Authorization: Bearer <token>
 
 ```http
 GET /users/details HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
+
+JSON response:
+{
+  "user": {
+    "id": 0,
+    "username": "string",
+    "password": "string",
+    "first_name": "string",
+    "last_name": "string",
+    "email": "user@example.com",
+    "phone_number": "stringst",
+    "role": "user",
+    "hashed_password": "string",
+    "is_blocked": true,
+    "disabled": true
+  },
+  "wallet": {
+    "id": 0,
+    "amount": 0,
+    "user_id": 0
+  },
+  "cards": [],
+  "categories": [],
+  "contacts": [],
+  "transactions": []
+}
 ```
 
 **Update User Profile**
 
 - Requires authentication.
-- Allows the user to update their profile information.
+- Allows the user to update their profile information. The fields of email and phone number must be unique.
+- Password update has the same restrictions as when registering a new user.
 
 ```http
 PUT /users/update HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -124,20 +193,23 @@ JSON body:
 
 ```http
 GET /wallets/balance HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
+
+JSON response:
+"Current balance = {amount} leva."
 ```
 
 **Top Up Wallet**
 
 - Requires authentication.
-- Allows user to top up their wallet using a card.
+- Allows user to top up their wallet using a only a bank card. Can't top up using virtual card.
 
 ```http
 POST /wallets/top-up HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -152,11 +224,11 @@ JSON body:
 **Withdraw Money from Wallet**
 
 - Requires authentication.
-- Allows user to withdraw money from their wallet to a card.
+- Allows user to withdraw money from their wallet to their bank card. Can't withdrawl money to a virtual card.
 
 ```http
 POST /wallets/withdraw HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -173,11 +245,12 @@ JSON body:
 **Add Card**
 
 - Requires authentication.
-- Allows user to add a new card.
+- Allows user to add a new unique bank card.
+- All added bank cards must comply to the standards for VISA and MASTERCARD.
 
 ```http
 POST /cards/add HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -193,11 +266,11 @@ JSON body:
 **Create Virtual Card**
 
 - Requires authentication.
-- Allows user to create a new virtual card.
+- Allows user to create a new unique virtual card, which complies with the standards for VISA and MASTERCARD.
 
 ```http
 POST /cards/create HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -217,7 +290,7 @@ JSON body:
 
 ```http
 POST /cards/virtual/online-purchases HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -236,7 +309,7 @@ JSON body:
 
 ```http
 DELETE /cards/delete/{card_id} HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -251,7 +324,7 @@ Authorization: Bearer <token>
 
 ```http
 GET /transactions/ HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -264,10 +337,21 @@ Authorization: Bearer <token>
 
 ```http
 GET /transactions/recurring HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
+
+JSON response:
+{
+  "1": {
+    "Amount": 0,
+    "Status": "confirmed or denied",
+    "Date of next transfer": null,
+    "Last transfer date": "2024-05-26",
+    "Send to": "string"
+  }
+}
 ```
 
 **Transfer to User**
@@ -277,7 +361,7 @@ Authorization: Bearer <token>
 
 ```http
 POST /transactions/{username} HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -294,8 +378,8 @@ JSON body:
 - Allows user to create a new in-app transaction.
 
  ```http
-POST /transactions/new_transaction/in_app HTTP/1.1
-Host: 127.0.0.1:8000
+POST /transactions/in-app HTTP/1.1
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -313,8 +397,8 @@ JSON body:
 - Allows user to create a new bank transfer.
 
 ```http
-POST /transactions/new_transaction/bank_transfer HTTP/1.1
-Host: 127.0.0.1:8000
+POST /transactions/bank-transfer HTTP/1.1
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -333,8 +417,8 @@ JSON body:
 - Confirms a pending transaction.
 
 ```http
-POST /transactions/transfer-confirmation/{confirmation_id} HTTP/1.1
-Host: 127.0.0.1:8000
+POST /transactions/confirmation/{confirmation_id} HTTP/1.1
+Host: 127.0.0.1:8001
 
 JSON body:
 {
@@ -348,8 +432,8 @@ JSON body:
 - Allows user to set an in-app recurring transaction.
 
 ```http
-POST /transactions/recurring/new-in-app HTTP/1.1
-Host: 127.0.0.1:8000
+POST /transactions/recurring/in-app HTTP/1.1
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -369,8 +453,8 @@ JSON body:
 - Allows user to set an external recurring transaction.
 
 ```http
-POST /transactions/recurring/new-external HTTP/1.1
-Host: 127.0.0.1:8000
+POST /transactions/recurring/bank-transfer HTTP/1.1
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -392,8 +476,8 @@ JSON body:
 - Allows user to update the status of a transaction.
 
 ```http
-PUT /transactions/{transaction_id}/amount/status HTTP/1.1
-Host: 127.0.0.1:8000
+PUT /transactions/{transaction_id}/status HTTP/1.1
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -420,10 +504,26 @@ JSON body:
 
 ```http
 GET /contacts/ HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
+
+JSON response:
+[
+  {
+    "id": 3,
+    "contact_name": "example12",
+    "email": "example12@example.com",
+    "phone_or_iban": "0888445566"
+  },
+  {
+    "id": 4,
+    "contact_name": "example123",
+    "email": "example123@example.com",
+    "phone_or_iban": "0888445567"
+  }
+]
 ```
 
 **Search Contacts**
@@ -433,7 +533,7 @@ Authorization: Bearer <token>
 
 ```http
 GET /contacts/search HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -450,7 +550,7 @@ contact_list: true
 
 ```http
 POST /contacts/add HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -468,16 +568,16 @@ JSON body:
 
  ```http
 POST /contacts/add/external HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
 
 JSON body:
 {
-    "contact_name": "John Doe",
-    "contact_email": "john.doe@example.com",
-    "iban": "BG12BUIN1234567890"
+    "contact_name": "NASA",
+    "contact_email": "NASA@example.com",
+    "iban": "US12BUIN1234567890"
 }
 ```
 
@@ -488,7 +588,7 @@ JSON body:
 
 ```http
 DELETE /contacts/remove HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -508,7 +608,7 @@ JSON body:
 
 ```http
 GET /categories/ HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -521,7 +621,7 @@ Authorization: Bearer <token>
 
 ```http
 POST /categories/ HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -539,7 +639,7 @@ JSON body:
 
 ```http
 POST /categories/{category_id}/transactions/{transaction_id} HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <token>
@@ -556,10 +656,19 @@ Authorization: Bearer <token>
 
 ```http
 GET /admin/users HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <admin_token>
+
+JSON response:
+[
+  "sample",
+  "sample1",
+  "sample12",
+  "sample123",
+  "sample1234"
+]
 ```
 
 **Get User by Search Type**
@@ -569,7 +678,7 @@ Authorization: Bearer <admin_token>
 
 ```http
 GET /admin/users/{search_type}/{search_value} HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <admin_token>
@@ -582,10 +691,42 @@ Authorization: Bearer <admin_token>
 
 ```http
 GET /admin/transactions HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <admin_token>
+
+JSON response:
+[
+  {
+    "id": 9,
+    "is_recurring": false,
+    "amount": 200,
+    "status": "confirmed",
+    "message": null,
+    "recurring_period": null,
+    "recurring_date": null,
+    "transaction_date": "2024-05-26",
+    "wallet_id": 1,
+    "receiver_id": 4,
+    "contact_list_id": 1,
+    "category_id": null
+  },
+  {
+    "id": 10,
+    "is_recurring": false,
+    "amount": 200,
+    "status": "confirmed",
+    "message": null,
+    "recurring_period": null,
+    "recurring_date": null,
+    "transaction_date": "2024-05-26",
+    "wallet_id": 4,
+    "receiver_id": 4,
+    "contact_list_id": null,
+    "category_id": null
+  }
+]
 ```
 
 **Get Pending Transactions**
@@ -595,7 +736,7 @@ Authorization: Bearer <admin_token>
 
 ```http
 GET /admin/transactions/pending HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <admin_token>
@@ -608,7 +749,7 @@ Authorization: Bearer <admin_token>
 
 ```http
 POST /admin/approve/{user_id} HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <admin_token>
@@ -621,7 +762,7 @@ Authorization: Bearer <admin_token>
 
 ```http
 POST /admin/transactions/deny/{transaction_id} HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <admin_token>
@@ -634,7 +775,7 @@ Authorization: Bearer <admin_token>
 
 ```http
 PUT /admin/block/{user_id} HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <admin_token>
@@ -647,7 +788,7 @@ Authorization: Bearer <admin_token>
 
 ```http
 PUT /admin/unblock/{user_id} HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 
 Headers:
 Authorization: Bearer <admin_token>
@@ -663,7 +804,7 @@ Authorization: Bearer <admin_token>
 
 ```http
 GET /Finance/top10cryptos HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 ```
 
 **Get Financial News**
@@ -672,24 +813,27 @@ Host: 127.0.0.1:8000
 
 ```http
 GET /Finance/news HTTP/1.1
-Host: 127.0.0.1:8000
+Host: 127.0.0.1:8001
 ```
 
 ## Required Packages
 **To run this project, you need to install the following packages:**
 
-- fastapi: A modern, fast (high-performance), web framework for building APIs with Python 3.6+ based on standard Python type hints.
-- passlib: A password hashing library for Python 2 & 3, which provides cross-platform implementations of over 30 password hashing algorithms.
-- jose: A JavaScript Object Signing and Encryption (JOSE) library for Python, which allows you to encode and decode JSON Web Tokens (JWT).
-- mariadb: A Python client library for MariaDB/MySQL, which allows Python programs to connect to a MariaDB or MySQL database.
-- pydantic: Data validation and settings management using Python type annotations.
-- starlette: A lightweight ASGI framework/toolkit, which is ideal for building high-performance asyncio services.
-- pytest: A framework that makes it easy to write simple tests.
+- `fastapi`: A modern, fast (high-performance), web framework for building APIs with Python 3.6+ based on standard Python type hints.
+- `passlib`: A password hashing library for Python 2 & 3, which provides cross-platform implementations of over 30 password hashing algorithms.
+- `jose`: A JavaScript Object Signing and Encryption (JOSE) library for Python, which allows you to encode and decode JSON Web Tokens (JWT).
+- `mariadb`: A Python client library for MariaDB/MySQL, which allows Python programs to connect to a MariaDB or MySQL database.
+- `pydantic`: Data validation and settings management using Python type annotations.
+- `starlette`: A lightweight ASGI framework/toolkit, which is ideal for building high-performance asyncio services.
+- `pytest`: A framework that makes it easy to write simple tests.
+- `oauth2`: An implementation of OAuth 2.0 for secure authorization.
+
+**Note:** Ensure you have Python 3.11 or later installed on your system.
 
 **You can install these packages using pip:**
 
 ```http
-pip install fastapi passlib jose mariadb pydantic starlette pytest pytest-aiohttp pytest-asyncio httpx
+pip install fastapi passlib jose mariadb pydantic starlette pytest pytest-aiohttp pytest-asyncio httpx oauth2 pytest-mocker python-multipart
 ```
 
 ## Links
