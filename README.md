@@ -9,10 +9,10 @@ This project aims to create a secure and efficient Virtual Wallet System backend
 - [Setup and Run Instructions](#setup-and-run-instructions)
 - [Features](#features)
   - [Public Part](#public-part)
-  - [Endpoints for Registered Users](#endpoints-for-registered-users)
+  - [Registered Users](#registered-users)
   - [Administrative Part](#administrative-part)
   - [Optional Features](#optional-features)
-- [Technologies Used](#technologies-used)
+- [Required Packages](#required-packages)
 - [Links](#links)
 
 ## **Project Structure:**
@@ -30,6 +30,8 @@ The system allows users to manage their virtual wallet, perform transactions, vi
 ## **Rest assured, the API meets modern standards and offers a comprehensive set of functionalities, including:**
 
 ## Features
+
+##Public Part
 
 ### **User Endpoints**
 
@@ -64,6 +66,8 @@ Form data:
     "password": "password"
 }
 ```
+
+##Registered Users
 
 **View User Profile**
 - Requires authentication.
@@ -540,6 +544,8 @@ Headers:
 Authorization: Bearer <token>
 ```
 
+##Administrative Part
+
 ## **Admin Endpoints**
 
 **Get All Users**
@@ -646,6 +652,8 @@ Headers:
 Authorization: Bearer <admin_token>
 ```
 
+## Optional Features
+
 ## **Financial News Endpoints**
 
 **Get Top 10 Cryptocurrencies**
@@ -684,4 +692,4 @@ pip install fastapi passlib jose mariadb pydantic starlette pytest pytest-aiohtt
 ```
 
 ## Links
-- [Swagger Documentation]([(http://127.0.0.1:8001/redoc)])
+- [Swagger Documentation](#http://127.0.0.1:8001/redoc)
