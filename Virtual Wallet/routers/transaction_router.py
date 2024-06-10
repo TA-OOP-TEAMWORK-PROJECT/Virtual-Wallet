@@ -65,7 +65,7 @@ def transfer_to_user(cur_transaction: UserTransfer, username: str,
     return result
 
 
-@transaction_router.post("/new_transaction/in_app")
+@transaction_router.post("/in-app")
 def new_user_transaction(cur_transaction: UserTransfer,
                            search: str,
                            current_user: Annotated[User, Depends(get_current_active_user)]):
@@ -79,7 +79,7 @@ def new_user_transaction(cur_transaction: UserTransfer,
             "transaction": confirmation_respose(internal_pending_confirmations[confirmation_id], current_user.username)}
 
 
-@transaction_router.post("/new_transaction/bank_transfer")
+@transaction_router.post("/bank-transfer")
 def create_bank_transfer(ext_user: ExternalContacts,
                          cur_transfer: UserTransfer,
                          current_user: Annotated[User, Depends(get_current_active_user)]):
@@ -93,7 +93,7 @@ def create_bank_transfer(ext_user: ExternalContacts,
             "transaction": confirmation_respose(external_pending_confirmations[confirmation_id], ext_user.contact_name)}
 
 
-@transaction_router.post("/transfer-confirmation/{confirmation_id}")
+@transaction_router.post("/confirmation/{confirmation_id}")
 async def confirm_transfer(confirmation_id: str,
                            response: ConfirmationResponse):
 
@@ -119,7 +119,7 @@ async def confirm_transfer(confirmation_id: str,
             return 'The transfer was denied!'
 
 
-@transaction_router.post("/recurring/new-external")
+@transaction_router.post("/recurring/bank-transfer")
 def set_external_recurring_transaction(transaction: RecurringTransaction,
                               contact: ExternalContacts,
                             current_user: Annotated[User, Depends(get_current_active_user)]):
@@ -128,7 +128,7 @@ def set_external_recurring_transaction(transaction: RecurringTransaction,
     return result
     #get_transaction_by_id
 
-@transaction_router.post("/recurring/new-in-app")
+@transaction_router.post("/recurring/in-app")
 def set_app_recurring_transaction(transaction: RecurringTransaction,
                               contact: UserTransfer,
                               current_user: Annotated[User, Depends(get_current_active_user)]):
@@ -139,7 +139,7 @@ def set_app_recurring_transaction(transaction: RecurringTransaction,
 
 #може да си сетнеш като погледнеш всички транзакции до сега които не са в приловението и да станат recurring
 
-@transaction_router.put("/{transaction_id}/amount/status")  # да сложа search - Когато юзъра си стига само до транзакцията и сетва
+@transaction_router.put("/{transaction_id}/status")  # да сложа search - Когато юзъра си стига само до транзакцията и сетва
 def status_update(transaction_id: int, new_status: str,
                   current_user: Annotated[User, Depends(get_current_active_user)]):
 

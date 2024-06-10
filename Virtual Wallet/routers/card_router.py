@@ -28,7 +28,7 @@ async def online_purchase(current_user: Annotated[User, Depends(get_current_acti
     return shop_online(current_user.id, card_id, amount)
 
 
-@card_router.put("/delete/{card_id}")
+@card_router.delete("/delete/{card_id}")
 async def delete_card(card_id: int, current_user: Annotated[User, Depends(get_current_active_user)]):
     return delete(card_id, current_user.id)
 
