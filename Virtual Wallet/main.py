@@ -22,11 +22,11 @@ app.include_router(finance_router)
 app.include_router(card_router)
 app.include_router(contact_router)
 
-# if __name__ == '__main__':
-#     uvicorn.run(app='main:app', host='127.0.0.1', port=8001, reload=True)
-
 if __name__ == '__main__':
-    uvicorn.run(app='main:app', host='0.0.0.0', port=8001, reload=True)
+    uvicorn.run(app='main:app', host='127.0.0.1', port=8001, reload=True)
+
+# if __name__ == '__main__':
+#     uvicorn.run(app='main:app', host='0.0.0.0', port=8001, reload=True)
 
 
 
