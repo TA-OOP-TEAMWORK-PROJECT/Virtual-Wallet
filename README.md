@@ -842,4 +842,4 @@ pip install fastapi passlib jose mariadb pydantic starlette pytest pytest-aiohtt
 ```
 
 ## Links
-- [Swagger Documentation](#http://127.0.0.1:8001/redoc)
+- [Swagger Documentation](http://127.0.0.1:8001/redoc)
