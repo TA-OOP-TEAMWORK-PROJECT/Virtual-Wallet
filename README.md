@@ -13,7 +13,7 @@ This project aims to create a secure and efficient Virtual Wallet System backend
   - [Administrative Part](#administrative-part)
   - [Optional Features](#optional-features)
 - [Required Packages](#required-packages)
-- [Links](#links)
+- [Swagger Documenation Link](#swagger-documentation-link)
 
 ## **Project Structure:**
 The Virtual Wallet system is a comprehensive application designed to simplify financial management for users. It offers a robust set of features that allow users to manage their virtual wallets, perform various types of transactions, view transaction history, manage cards and contacts, and access the latest financial news.
