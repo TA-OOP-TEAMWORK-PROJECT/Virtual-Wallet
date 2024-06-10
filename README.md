@@ -838,7 +838,7 @@ Host: 127.0.0.1:8001
 **You can install these packages using pip:**
 
 ```http
-pip install fastapi passlib jose mariadb pydantic starlette pytest pytest-aiohttp pytest-asyncio httpx oauth2 pytest-mocker python-multipart
+pip install fastapi passlib jose mariadb pydantic starlette pytest pytest-aiohttp pytest-asyncio httpx oauth2 pytest-mock python-multipart
 ```
 
 ## Documentation Link
