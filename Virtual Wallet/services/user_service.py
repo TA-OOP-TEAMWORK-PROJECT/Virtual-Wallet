@@ -6,19 +6,24 @@ from fastapi import HTTPException
 from data_.models import User
 from services.admin_service import send_registration_email
 
+
+
 def create(username: str, password: str, first_name: str,
-           last_name: str, email: str, phone_number: str) -> User | None:
-
-    existing_user = read_query('SELECT id FROM users WHERE username = ?', (username,))
-    if existing_user:
-        raise HTTPException(status_code=400, detail=f'Username {username} is taken.')
-
+           last_name: str, email: str, phone_number: str) -> User | None: ##Updated
+    password_check(password)
+    check_if_unique(username, email, phone_number)
     hash_password = auth.get_password_hash(password)
 
     generated_id = insert_query(
         '''INSERT INTO users(username, first_name, last_name, 
                 email, phone_number, hashed_password) VALUES (?,?,?,?,?,?)''',
         (username, first_name, last_name, email, phone_number, hash_password))
+
+    insert_query(
+        '''INSERT INTO wallet (user_id, amount) VALUES (?, ?)''',
+        (generated_id, 0.0)
+    )
+
     new_user = User(id=generated_id, username=username, password=password, first_name=first_name, last_name=last_name,
                 email=email, phone_number=phone_number, hashed_password=hash_password)
     send_registration_email(new_user.email)
@@ -32,6 +37,27 @@ def find_by_username(username: str) -> User | None:
             FROM users WHERE username = ?''',
             (username, ))
 
+    return next((User.from_query_result(*row) for row in data), None)
+
+
+def find_by_phone_number(phone_number: str) :
+    data = read_query(
+        '''SELECT id, username, first_name, last_name,
+            email, phone_number, role, hashed_password, is_blocked
+            FROM users WHERE phone_number = ?''',
+            (phone_number, ))
+
+    return next((User.from_query_result(*row) for row in data), None)
+
+
+
+def find_by_id(user_id: int) -> User: #
+    data = read_query(
+        '''SELECT id, username, first_name, last_name,
+                  email, phone_number, role, hashed_password, is_blocked
+                  FROM users WHERE id = ?''',
+        (user_id,)
+    )
     return next((User.from_query_result(*row) for row in data), None)
 
 
@@ -50,6 +76,12 @@ def update_user_profile(username: str, user_update: UserUpdate):
     if not current_user:
         return None
 
+    if user_update.email != current_user.email or user_update.phone_number != current_user.phone_number:
+        check_if_unique(
+            email=user_update.email if user_update.email != current_user.email else current_user.email,
+            phone_number=user_update.phone_number if user_update.phone_number != current_user.phone_number else current_user.phone_number
+        )
+
     update_fields = []
     update_params = []
     message_parts = []
@@ -65,6 +97,7 @@ def update_user_profile(username: str, user_update: UserUpdate):
         message_parts.append(f"phone number from {current_user.phone_number} to {user_update.phone_number}")
 
     if user_update.password:
+        password_check(user_update.password)
         hashed_password = auth.get_password_hash(user_update.password)
         update_fields.append("hashed_password = ?")
         update_params.append(hashed_password)
@@ -82,13 +115,16 @@ def update_user_profile(username: str, user_update: UserUpdate):
 
 def get_user_account_details(user_id: int) -> AccountDetails:  #  Дали можем да направим търсене само веднъж, да създадем клас и така да върнем инфото
     user = find_by_id(user_id)
-    cards = get_user_cards(user_id)
+    wallet = get_user_wallet(user_id)
+    wallet_id = wallet.id
+    cards = get_user_cards(wallet_id)
     categories = get_user_categories(user_id)
     contacts = get_user_contacts(user_id)
-    transactions = get_user_transactions(user_id)
+    transactions = get_user_transactions(wallet_id)
 
     return AccountDetails(
         user=user,
+        wallet=wallet,
         cards=cards,
         categories=categories,
         contacts=contacts,
@@ -96,19 +132,9 @@ def get_user_account_details(user_id: int) -> AccountDetails:  #  Дали мо�
     )
 
 
-def find_by_id(user_id: int) -> User:
-    data = read_query(
-        '''SELECT id, username, first_name, last_name,
-                  email, phone_number, role, hashed_password, is_blocked
-                  FROM users WHERE id = ?''',
-        (user_id,)
-    )
-    return next((User.from_query_result(*row) for row in data), None)
-
-
 def get_user_cards(wallet_id: int) -> list[Card]:
     data = read_query(
-        '''SELECT id, number, exp_date, cardholder_name, cvv, is_virtual
+        '''SELECT id, number, exp_date, cardholder_name, cvv, wallet_id, is_virtual
                   FROM cards WHERE wallet_id = ?''',
         (wallet_id,)
     )
@@ -127,10 +153,10 @@ def get_user_wallet(user_id: int):
     return [Wallet.from_query_result(*row) for row in data][0]  #!!!
 
 
-def get_user_categories(transaction_id: int) -> list[Categories]:
+def get_user_categories(user_id: int) -> list[Categories]:
     data = read_query(
-        '''SELECT id, title FROM categories WHERE transaction_id = ?''',
-        (transaction_id,)
+        '''SELECT id, title, user_id FROM categories WHERE user_id = ?''',
+        (user_id,)
     )
     return [Categories.from_query_result(*row) for row in data]
 
@@ -142,131 +168,55 @@ def get_user_contacts(user_id: int) -> list[ContactList]:
     )
     return [ContactList.from_query_result(*row) for row in data]
 
-
-def get_user_transactions(wallet_id: int) -> list[Transactions]:
+def get_contact_external_user(contact_list_id:int):
+    if contact_list_id is None:
+        return None
     data = read_query(
-        '''SELECT id, is_recurring, amount, status, message, recurring_period, recurring_date, transaction_date, receiver_id
-                  FROM transactions WHERE wallet_id = ?''',
+        '''SELECT e.id, e.contact_name, e.contact_email, e.iban
+                FROM external_user e
+                JOIN contact_list c 
+                WHERE c.id = ?
+                AND e.id = c.external_user_id''',
+        (contact_list_id, ))
+    if not data:
+        return None
+
+    return [ExternalContacts.from_query_result(*row) for row in data][0]
+
+def get_user_transactions(wallet_id: int) -> list[Transactions]:  # тук излизат само тези, които са изпратени от юзъра TODO
+    data = read_query(
+        '''SELECT id, is_recurring, amount, status, message, recurring_period, 
+                  recurring_date, transaction_date, wallet_id, receiver_id, contact_list_id, category_id
+           FROM transactions WHERE wallet_id = ?''',
         (wallet_id,)
     )
     return [Transactions.from_query_result(*row) for row in data]
 
 
-def get_username_by(user_id: int, search: str, contact_list: bool = False) -> dict:
-    results = []
-
-    user_data = read_query('''
-        SELECT username 
-        FROM users
-        WHERE email LIKE ?
-        OR username LIKE ?
-        OR phone_number LIKE ?''',
-        (f'%{search}%', f'%{search}%', f'%{search}%'))
-
-    for row in user_data:
-        results.append(row[0])
-
-    if contact_list:
-        user_data = read_query('''
-            SELECT users.username 
-            FROM users
-            JOIN contact_list ON users.id = contact_list.contact_id
-            WHERE contact_list.user_id = ?
-            AND (users.email LIKE ?
-            OR users.username LIKE ?
-            OR users.phone_number LIKE ?)''',
-            (user_id, f'%{search}%', f'%{search}%', f'%{search}%'))
-
-        external_user_data = read_query('''
-            SELECT external_user.contact_name 
-            FROM external_user
-            JOIN contact_list ON external_user.id = contact_list.external_user_id
-            WHERE contact_list.user_id = ?
-            AND (external_user.contact_name LIKE ?
-            OR external_user.contact_email LIKE ?
-            OR external_user.iban LIKE ?)''',
-            (user_id, f'%{search}%', f'%{search}%', f'%{search}%'))
-
-        for row in user_data:
-            results.append(row[0])
-
-        for row in external_user_data:
-            results.append(row[0])
-
-    if not results:
-        raise HTTPException(status_code=404, detail="No such user in the system, maybe check your contact list?")
-
-    result_dict = {i + 1: result for i, result in enumerate(results)}
-
-    return result_dict  # ako nqma zapisi? # Оправено
-
-def view_user_contacts(user_id: int) -> list[ViewContacts]: #Easter Egg
-    data = read_query(
-        '''SELECT contact_list.id,  
-                  CASE 
-                      WHEN contact_list.contact_id IS NOT NULL THEN users.username 
-                      ELSE external_user.contact_name 
-                  END AS contact_name,
-                  CASE 
-                      WHEN contact_list.contact_id IS NOT NULL THEN users.email 
-                      ELSE external_user.contact_email 
-                  END AS email,
-                  CASE 
-                      WHEN contact_list.contact_id IS NOT NULL THEN users.phone_number 
-                      ELSE external_user.iban 
-                  END AS phone_or_iban
-           FROM contact_list 
-           LEFT JOIN users ON contact_list.contact_id = users.id 
-           LEFT JOIN external_user ON contact_list.external_user_id = external_user.id
-           WHERE contact_list.user_id = ?''',
-        (user_id,)
-    )
-    return [ViewContacts(id=row[0], contact_name=row[1], email=row[2], phone_or_iban=row[3]) for row in data]
+def check_if_unique(username: str = None, email: str = None, phone_number: str = None):
+    if username:
+        existing_user = read_query('SELECT id FROM users WHERE username = ?', (username,))
+        if existing_user:
+            raise HTTPException(status_code=400, detail=f'Username {username} is taken.')
+    if email:
+        existing_email = read_query('SELECT id FROM users WHERE email = ?', (email,))
+        if existing_email:
+            raise HTTPException(status_code=400, detail=f'Email {email} is taken.')
+    if phone_number:
+        existing_phone_number = read_query('SELECT id FROM users WHERE phone_number = ?', (phone_number,))
+        if existing_phone_number:
+            raise HTTPException(status_code=400, detail=f'Phone number {phone_number} is taken.')
 
 
-def add_user_to_contacts(user_id: int, contact_username: str) -> ContactList:
-    contact_user = find_by_username(contact_username)
-    if not contact_user:
-        raise HTTPException(status_code=404, detail="No such user")
-
-    existing_contact = read_query(
-        '''SELECT id FROM contact_list WHERE user_id = ? AND contact_id = ?''',
-        (user_id, contact_user.id)
-    )
-    if existing_contact:
-        raise HTTPException(status_code=400, detail="Contact already exists")
-
-    contact_id = insert_query(
-        '''INSERT INTO contact_list (user_id, contact_id) VALUES (?, ?)''',
-        (user_id, contact_user.id)
-    )
-    return ContactList(id=contact_id, user_id=user_id, contact_id=contact_user.id)
-
-
-
-def add_external_contact(user_id: int, contact_data: ExternalContacts) -> ContactList:
-    existing_external_user = read_query(
-        '''SELECT id FROM contact_list WHERE user_id = ? AND external_user_id = ?''',
-        (user_id, contact_data.iban))
-
-    if existing_external_user:
-        external_user_id = existing_external_user[0][0]
-    else:
-        external_user_id = insert_query(
-            '''INSERT INTO external_user (contact_name, contact_email, iban) VALUES (?, ?, ?)''',
-            (contact_data.contact_name, contact_data.contact_email, contact_data.iban))
-
-    existing_contact = read_query(
-        '''SELECT id FROM contact_list WHERE user_id = ? AND external_user_id = ?''',
-        (user_id, external_user_id))
-
-    if existing_contact:
-        raise HTTPException(status_code=400, detail="External contact already exists")
-
-    contact_id = insert_query(
-        '''INSERT INTO contact_list (user_id, external_user_id) VALUES (?, ?)''',
-        (user_id, external_user_id))
-
-    return ContactList(id=contact_id, user_id=user_id, external_user_id=external_user_id)
+def password_check(password: str) -> str:
+    if not any(char.isdigit() for char in password):
+        raise HTTPException(status_code=400, detail='Password must contain at least one digit')
+    if not any(char.isupper() for char in password):
+        raise HTTPException(status_code=400, detail='Password must contain at least one uppercase letter')
+    if not any(char.islower() for char in password):
+        raise HTTPException(status_code=400, detail='Password must contain at least one lowercase letter')
+    if not any(char in '+-*^&' for char in password):
+        raise HTTPException(status_code=400, detail='Password must contain at least one special character (+, -, *, ^, &)')
+    return password
 
 

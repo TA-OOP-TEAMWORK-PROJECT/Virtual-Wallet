@@ -1,15 +1,26 @@
-import unittest
+import sys
+import os
+import pytest
+from unittest.mock import patch
+from datetime import date
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from services.admin_service import block_user, deny_pending_transaction, get_all_users, unblock_user, approve_user, get_all_transactions, get_pending_transactions, get_user
 
 
-class MyTestCase(unittest.TestCase):
-    def test_something(self):
-        self.assertEqual(True, False)  # add assertion here
+@patch('services.admin_service.read_query')
+@patch('services.admin_service.update_query')
+def test_block_user_success(mock_update_query, mock_read_query):
+    mock_read_query.return_value = [(1,)]
+    mock_update_query.return_value = None
+    
+    result = block_user(1)
+    
+    assert result == 'User blocked successfully'
+    
+    mock_read_query.assert_called_once_with("SELECT id FROM users WHERE id = ?", (1,))
+    mock_update_query.assert_called_once_with("UPDATE users SET is_blocked = 1 WHERE id = ?", (1,))
 
 
-<<<<<<< Updated upstream
-if __name__ == '__main__':
-    unittest.main()
-=======
 @patch('services.admin_service.read_query')
 def test_block_user_user_not_found(mock_read_query):
     mock_read_query.return_value = []
@@ -141,7 +152,6 @@ def test_get_user_by_id(mock_read_query):
     
     user = get_user(search_type='id', search_value='1')
     
-
     assert len(user) == 1
     assert user[0].id == 1
     assert user[0].username == 'user1'
@@ -186,4 +196,3 @@ def test_deny_pending_transaction(mock_update_query):
         SET status = 'denied'
         WHERE id = %s AND status = 'pending'
         ''', (1,))
->>>>>>> Stashed changes

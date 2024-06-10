@@ -5,26 +5,26 @@ import requests
 from data_.database import update_query, read_query
 from data_.database import _get_connection
 from common.config import MAILJET_API_KEY, MAILJET_API_SECRET, ADMIN_EMAIL
+
 def block_user(user_id: int):
-    # проверка за юзъра
+
     user_result = read_query("SELECT id FROM users WHERE id = ?", (user_id,))
     if not user_result:
         raise ValueError(f'No user found with id {user_id}')
 
-    # блокиране на юзъра
     update_query("UPDATE users SET is_blocked = 1 WHERE id = ?", (user_id,))
     
     return 'User blocked successfully'
 
 
 def unblock_user(user_id: int):
-    # проверка на юзъра
+
     user_result = read_query("SELECT id FROM users WHERE id = ?", (user_id,))
     if not user_result:
         raise ValueError(f'No user found with id {user_id}')
 
     
-    # отблокиране на юзъра
+
     update_query("UPDATE users SET is_blocked = 0 WHERE id = ?", (user_id,))
 
     return 'User unblocked successfully!'
@@ -78,7 +78,8 @@ def get_all_transactions(page: int = 1,
     offset = (page - 1) * page_size
 
     sql_query = '''
-    SELECT id, is_recurring, amount, status, message, transaction_date, recurring_date, wallet_id, receiver_id
+    SELECT id, is_recurring, amount, status, message, recurring_period, recurring_date, transaction_date,
+     wallet_id, receiver_id, category_id
     FROM transactions
     WHERE 1=1
     '''
@@ -107,7 +108,6 @@ def get_all_transactions(page: int = 1,
     sql_query += ' LIMIT %s OFFSET %s'
     params.extend([page_size, offset])
 
-    # Изпълнение на заявката и обработка на резултата
     data = read_query(sql_query, params)
     transactions = [Transactions.from_query_result(*row) for row in data]
     
