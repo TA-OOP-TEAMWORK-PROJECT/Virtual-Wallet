@@ -1,7 +1,7 @@
 
 DB_USER = 'root'
 DB_PASSWORD = '2[_K88PER]oV'
-DB_HOST = '172.20.224.105'
+DB_HOST = 'host.docker.internal'
 DB_PORT = 3306
 DB_NAME = 'virtual_wallet'
 
@@ -15,3 +15,9 @@ ADMIN_EMAIL = 'nikolay.stankov1@gmail.com'
 COINMARKETCAP_API_KEY='3f3a45bd-0152-46f9-8641-9850e53be791'
 
 NEWS_API_KEY = 'b48b4a42bb9c4d099a21e4165f4ffc22'
+
+# DB_USER = 'root'
+# DB_PASSWORD = '2[_K88PER]oV'
+# DB_HOST = '172.20.224.105'
+# DB_PORT = 3306
+# DB_NAME = 'virtual_wallet'

@@ -285,9 +285,6 @@ def get_transactions(user: User, search):
 
 
 
-
-
-
 def view_all_recuring_transactions(user):
 
     user_wallet = get_user_wallet(user.id)
