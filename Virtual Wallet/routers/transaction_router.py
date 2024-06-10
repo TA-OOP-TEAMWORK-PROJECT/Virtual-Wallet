@@ -120,7 +120,7 @@ async def confirm_transfer(confirmation_id: str,
 
 @transaction_router.post("/recurring/new-external")
 def set_external_recurring_transaction(transaction: RecurringTransaction,
-                              contact: ExternalContacts,
+                            contact: ExternalContacts,
                             current_user: Annotated[User, Depends(get_current_active_user)]):
 
     result = external_recurring_transaction(transaction, contact, current_user)

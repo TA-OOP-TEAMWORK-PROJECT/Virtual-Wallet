@@ -116,8 +116,6 @@ def in_app_transfer(cur_transaction, search, cur_user): #ук търси в це
 
 def bank_transfer(ext_user, cur_transaction, current_user):
 
-
-
     contact_list = get_contact_list(current_user, ext_user.contact_name)
 
     if contact_list is None:
@@ -142,7 +140,7 @@ def bank_transfer(ext_user, cur_transaction, current_user):
                                             is_external=True)
 
 
-    return transfer_message #
+    return transfer_message
 
 
 def process_bank_transfer(pending_request): #is_confirmed - в случай, че решим, че искаме да записваме отказани трансфери
@@ -161,17 +159,6 @@ def process_bank_transfer(pending_request): #is_confirmed - в случай, ч�
                         (pending_request.transaction_amount, "confirmed", date.today(),
                                 pending_request.wallet_id, pending_request.receiver_id))
 
-
-       # transaction_id = cur_user_insert
-       #  cur_user_update_status = update_query('''
-       #  UPDATE transactions
-       #  SET status = "confirmed"
-       #  WHERE id = ?''',
-       #  (cur_user_insert, ))
-
-    # else:
-    #
-    #     result = transfer_to_user(pending_request)
 
 def get_recuring_transactions(search_by, search): #search e data, ako tyrsim vsichki tranzakcii ili user_id ako samo na 1 user
 
@@ -201,7 +188,7 @@ def get_recuring_transactions(search_by, search): #search e data, ako tyrsim vsi
             pass
 
     transactions_result = [Transactions.create_transaction_class(*t) for t in transactions]
-    return get_transaction_response(transactions_result) #TODO - da izliza kat' orata
+    return get_transaction_response(transactions_result)
 
 
 
@@ -284,7 +271,6 @@ def get_transactions(user: User, search):
     return [Transactions.get_transactions_query(*t) for t in data]
 
 
-
 def view_all_recuring_transactions(user):
 
     user_wallet = get_user_wallet(user.id)
@@ -315,13 +301,6 @@ def take_response(data):
         }
 
     return result
-
-
-
-
-
-
-
 
 
 
@@ -495,7 +474,7 @@ def external_recurring_transaction(ext_rec_transaction: RecurringTransaction,
     user_wallet = get_user_wallet(cur_user.id)
 
     if user_wallet.amount < ext_rec_transaction.amount:
-        raise HTTPException(status_code=400, detail='"Not enough funds to complete the transaction')
+        raise HTTPException(status_code=400, detail='Not enough funds to complete the transaction')
 
     insert_query('''
     INSERT INTO transactions(is_recurring, amount, status, recurring_period, 
@@ -525,7 +504,7 @@ def app_recurring_transaction(transaction, receiver_transaction_data: UserTransf
     user_wallet = get_user_wallet(cur_user.id)
 
     if user_wallet.amount < receiver_transaction_data.amount:
-        raise HTTPException(status_code=400, detail='"Not enough funds to complete the transaction')
+        raise HTTPException(status_code=400, detail='Not enough funds to complete the transaction')
 
 
     insert_query('''
