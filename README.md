@@ -841,5 +841,5 @@ Host: 127.0.0.1:8001
 pip install fastapi passlib jose mariadb pydantic starlette pytest pytest-aiohttp pytest-asyncio httpx oauth2 pytest-mocker python-multipart
 ```
 
-## Links
+## Documentation Link
 - [Swagger Documentation](http://127.0.0.1:8001/redoc)
