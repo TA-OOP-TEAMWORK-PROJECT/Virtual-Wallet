@@ -124,6 +124,7 @@ def get_user_account_details(user_id: int) -> AccountDetails:  #  Дали мо�
 
     return AccountDetails(
         user=user,
+        wallet=wallet,
         cards=cards,
         categories=categories,
         contacts=contacts,

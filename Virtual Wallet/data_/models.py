@@ -60,7 +60,7 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     email: EmailStr
     phone_number: str = Field(min_length=8, max_length=10, pattern=r'^\d{8,10}$')
-    password: str = Field(min_length=8, max_length=20) or None
+    password: str | None = Field(min_length=8, max_length=20)
 
     @classmethod
     def from_user(cls, user: User):
@@ -329,6 +329,7 @@ class Categories(BaseModel):
 
 class AccountDetails(BaseModel): #
     user: User
+    wallet: Wallet
     cards: list[Card]
     categories: list[Categories]
     contacts: list[ContactList]
