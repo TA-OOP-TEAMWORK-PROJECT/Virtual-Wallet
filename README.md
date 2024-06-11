@@ -7,13 +7,14 @@ This project aims to create a secure and efficient Virtual Wallet System backend
 - [Project Structure](#project-structure)
 - [Database Schema](#database-schema)
 - [Setup and Run Instructions](#setup-and-run-instructions)
+- [Setup and Run Instructions With Docker](#setup-and-run-instructions-with-docker)
 - [Features](#features)
   - [Public Part](#public-part)
   - [Registered Users](#registered-users)
   - [Administrative Part](#administrative-part)
   - [Optional Features](#optional-features)
 - [Required Packages](#required-packages)
-- [Documentation Link](#documentation-link)
+- [Documentation](#documentation)
 
 ## **Project Structure:**
 The Virtual Wallet system is a comprehensive application designed to simplify financial management for users. It offers a robust set of features that allow users to manage their virtual wallets, perform various types of transactions, view transaction history, manage cards and contacts, and access the latest financial news.
@@ -61,11 +62,68 @@ The Virtual Wallet application is a testament to the possibilities of digital fi
 ![finaldatabase](https://github.com/TA-OOP-TEAMWORK-PROJECT/Virtual-Wallet/assets/156197933/082f2a84-daa1-481d-80a7-45572179cd59)
 
 ## Setup and Run Instructions
-1. Clone the repository.
-2. Run the database scripts to create and populate the database.
-3. Configure the application settings (e.g., database connection, email service).
-4. Check the [Required Packages](#required-packages) section for further instructions.
-5. Run the application.
+
+1. **Clone the repository:**
+    ```sh
+    git clone https://github.com/TA-OOP-TEAMWORK-PROJECT/Virtual-Wallet.git
+    ```
+
+2. **Install dependencies:**
+    ```sh
+    pip install -r requirements.txt
+    ```
+    
+3. **Run the database scripts to create and populate the database.**
+
+4. **Update Configuration:**
+    In the config file in common folder, update your database credentials:
+    ```python
+    DB_USER = os.getenv('DB_USER', 'root')
+    DB_PASSWORD = os.getenv('DB_PASSWORD', 'your_password')
+    DB_HOST = os.getenv('DB_HOST', 'localhost')
+    DB_PORT = int(os.getenv('DB_PORT', 3306))
+    DB_NAME = os.getenv('DB_NAME', 'virtual_wallet')
+    ```
+
+5. **Run the application:**
+    ```sh
+    uvicorn app:app --reload
+    ```
+
+6. **For further instructions, check [Required Packages](#required-packages)**
+
+## Setup and Run Instructions With Docker
+**Note:** Do this steps after completing the process described in [Setup and Run Instructions](#setup-and-run-instructions)
+
+1. **Install Docker:**
+    - [Docker Desktop](https://www.docker.com/products/docker-desktop) for Windows and Mac
+    - [Docker Engine](https://docs.docker.com/engine/install/) for Linux
+
+2. **Update Configuration:**
+  
+    In the `.env` file, update your database credentials, but leave the `DB_HOST` as it is:
+    ```env
+    DB_USER=root
+    DB_PASSWORD=your_password
+    DB_HOST=host.docker.internal
+    DB_PORT=3306
+    DB_NAME=virtual_wallet
+    ```
+
+3. **Run Docker commands:**
+    ```sh
+    docker-compose up --build -d # Creating the docker
+    docker-compose ps # Checking the status of the service
+    docker-compose logs # View the logs of all services
+    docker-compose down # Stop and remove the previous Docker Compose Setup
+    ```
+
+4. **Enable Virtual Machine:**
+    If Docker Desktop does not start, ensure virtualization is enabled in your BIOS:
+    - Restart your PC and enter the BIOS settings (usually by pressing `Del`, `F2`, or `Esc` during boot).
+    - Navigate to `Advanced Settings` > `CPU Configuration` and enable `SVM` (AMD) or `VT-x` (Intel).
+    - Save and exit the BIOS settings.
+
 
 ## Features
 
@@ -383,7 +441,7 @@ JSON body:
 - Allows user to create a new in-app transaction.
 
  ```http
-POST /transactions/in-app HTTP/1.1
+POST /transactions/new/in-app HTTP/1.1
 Host: 127.0.0.1:8001
 
 Headers:
@@ -402,7 +460,7 @@ JSON body:
 - Allows user to create a new bank transfer.
 
 ```http
-POST /transactions/bank-transfer HTTP/1.1
+POST /transactions/new/bank-transfer HTTP/1.1
 Host: 127.0.0.1:8001
 
 Headers:
@@ -437,7 +495,7 @@ JSON body:
 - Allows user to set an in-app recurring transaction.
 
 ```http
-POST /transactions/recurring/in-app HTTP/1.1
+POST /transactions/new/recurring/in-app HTTP/1.1
 Host: 127.0.0.1:8001
 
 Headers:
@@ -458,7 +516,7 @@ JSON body:
 - Allows user to set an external recurring transaction.
 
 ```http
-POST /transactions/recurring/bank-transfer HTTP/1.1
+POST /transactions/new/recurring/bank-transfer HTTP/1.1
 Host: 127.0.0.1:8001
 
 Headers:
@@ -822,24 +880,20 @@ Host: 127.0.0.1:8001
 ```
 
 ## Required Packages
-**To run this project, you need to install the following packages:**
 
-- `fastapi`: A modern, fast (high-performance), web framework for building APIs with Python 3.6+ based on standard Python type hints.
-- `passlib`: A password hashing library for Python 2 & 3, which provides cross-platform implementations of over 30 password hashing algorithms.
-- `jose`: A JavaScript Object Signing and Encryption (JOSE) library for Python, which allows you to encode and decode JSON Web Tokens (JWT).
-- `mariadb`: A Python client library for MariaDB/MySQL, which allows Python programs to connect to a MariaDB or MySQL database.
-- `pydantic`: Data validation and settings management using Python type annotations.
-- `starlette`: A lightweight ASGI framework/toolkit, which is ideal for building high-performance asyncio services.
-- `pytest`: A framework that makes it easy to write simple tests.
-- `oauth2`: An implementation of OAuth 2.0 for secure authorization.
+**In order to run our product without a problem use the product-requirements.txt**
 
 **Note:** Ensure you have Python 3.11 or later installed on your system.
 
-**You can install these packages using pip:**
+**Or you can install these packages directly using pip:**
 
 ```http
-pip install fastapi passlib jose mariadb pydantic starlette pytest pytest-aiohttp pytest-asyncio httpx oauth2 pytest-mock python-multipart
+pip install aiohttp anyio APScheduler bcrypt certifi cffi charset-normalizer colorama cryptography email_validator fastapi h11 httpcore httpx idna mariadb multidict numpy packaging passlib pydantic pytest pytest-aiohttp pytest-asyncio pytest-mock python-dateutil python-jose python-multipart requests six sniffio starlette typing_extensions uvicorn DateTime mailjet
+
 ```
 
-## Documentation Link
-- [Swagger Documentation](http://127.0.0.1:8001/redoc)
+## Documentation
+
+**If you are interested in our project and want to take a closer look, after downloading and installing the requirements, check our documentation.**
+
+- You can do that do that by either using FastAPI /docs or /redoc
