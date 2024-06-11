@@ -26,8 +26,7 @@ internal_pending_confirmations: Dict[str, Dict] = {}
 async def startup_event():
 
     cron_trigger = CronTrigger(hour=12, minute=0)
-
-    recurring_transactions()
+    scheduler.add_job(recurring_transactions, cron_trigger)
 
     scheduler.start()
 
@@ -65,7 +64,7 @@ def transfer_to_user(cur_transaction: UserTransfer, username: str,
     return result
 
 
-@transaction_router.post("/in-app")
+@transaction_router.post("/new/in-app")
 def new_user_transaction(cur_transaction: UserTransfer,
                            search: str,
                            current_user: Annotated[User, Depends(get_current_active_user)]):
@@ -79,7 +78,7 @@ def new_user_transaction(cur_transaction: UserTransfer,
             "transaction": confirmation_respose(internal_pending_confirmations[confirmation_id], current_user.username)}
 
 
-@transaction_router.post("/bank-transfer")
+@transaction_router.post("/new/bank-transfer")
 def create_bank_transfer(ext_user: ExternalContacts,
                          cur_transfer: UserTransfer,
                          current_user: Annotated[User, Depends(get_current_active_user)]):
@@ -119,16 +118,16 @@ async def confirm_transfer(confirmation_id: str,
             return 'The transfer was denied!'
 
 
-@transaction_router.post("/recurring/bank-transfer")
+@transaction_router.post("/new/recurring/bank-transfer")
 def set_external_recurring_transaction(transaction: RecurringTransaction,
-                              contact: ExternalContacts,
+                            contact: ExternalContacts,
                             current_user: Annotated[User, Depends(get_current_active_user)]):
 
     result = external_recurring_transaction(transaction, contact, current_user)
     return result
     #get_transaction_by_id
 
-@transaction_router.post("/recurring/in-app")
+@transaction_router.post("/new/recurring/in-app")
 def set_app_recurring_transaction(transaction: RecurringTransaction,
                               contact: UserTransfer,
                               current_user: Annotated[User, Depends(get_current_active_user)]):

@@ -159,6 +159,7 @@ class Transactions(BaseModel):
                           recurring_date: date | None, transaction_date: date,
                           wallet_id: int | None, receiver_id: int | None, contact_list_id: int | None = None,
                           category_id: int | None = None):
+
         return cls(
             id=id,
             is_recurring=cls.validate_recurring_state(is_recurring),

@@ -150,6 +150,10 @@ def get_user_wallet(user_id: int):
     WHERE user_id = ?''',
     (user_id, ))
 
+    if not data:
+        print(f"No wallet found for user_id: {user_id}")
+        return None
+
     return [Wallet.from_query_result(*row) for row in data][0]  #!!!
 
 
