@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 from data_.models import User, AccountDetails, UserCreate, UserUpdate
 from tests.mock_users_data import authorized_client, mock_user, regular_token, client
 
-def test_read_users_me(authorized_client, mock_user):
+def test_read_users_me(authorized_client, mock_user): #
     with patch('services.user_service.find_by_username', return_value=mock_user):
         with patch('routers.user_router.get_user_response', return_value={
             "id": 1,
