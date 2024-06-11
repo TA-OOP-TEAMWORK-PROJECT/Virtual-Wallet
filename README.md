@@ -840,8 +840,12 @@ Host: 127.0.0.1:8001
 **You can install these packages directly using pip:**
 
 ```http
-pip install fastapi passlib jose mariadb pydantic starlette pytest pytest-aiohttp pytest-asyncio httpx oauth2 pytest-mock python-multipart
+pip install aiohttp anyio APScheduler bcrypt certifi cffi charset-normalizer colorama cryptography email_validator fastapi h11 httpcore httpx idna mariadb multidict numpy packaging passlib pydantic pytest pytest-aiohttp pytest-asyncio pytest-mock python-dateutil python-jose python-multipart requests six sniffio starlette typing_extensions uvicorn DateTime mailjet
+
 ```
 
 ## Documentation
-- [Swagger Documentation](http://127.0.0.1:8001/redoc)
+
+**If you are interested in our project and want to take a closer look, after downloading and installing the requirements, check our documentation.**
+
+- You can do that do that by either using FastAPI /docs or /redoc
