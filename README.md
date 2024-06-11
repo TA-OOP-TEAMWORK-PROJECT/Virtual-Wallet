@@ -101,7 +101,7 @@ The Virtual Wallet application is a testament to the possibilities of digital fi
 
 2. **Update Configuration:**
   
-    In the `.env` file, update your database credentials but leave the `DB_HOST` as it is:
+    In the `.env` file, update your database credentials, but leave the `DB_HOST` as it is:
     ```env
     DB_USER=root
     DB_PASSWORD=your_password
