@@ -127,7 +127,7 @@ def set_external_recurring_transaction(transaction: RecurringTransaction,
     return result
     #get_transaction_by_id
 
-@transaction_router.post("/recurring/new-in-app") #
+@transaction_router.post("/recurring/new-in-app")
 def set_app_recurring_transaction(transaction: RecurringTransaction,
                               contact: UserTransfer,
                               current_user: Annotated[User, Depends(get_current_active_user)]):
