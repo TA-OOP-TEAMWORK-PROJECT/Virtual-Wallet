@@ -13,7 +13,7 @@ This project aims to create a secure and efficient Virtual Wallet System backend
   - [Administrative Part](#administrative-part)
   - [Optional Features](#optional-features)
 - [Required Packages](#required-packages)
-- [Documentation Link](#documentation-link)
+- [Documentation](#documentation)
 
 ## **Project Structure:**
 The Virtual Wallet system is a comprehensive application designed to simplify financial management for users. It offers a robust set of features that allow users to manage their virtual wallets, perform various types of transactions, view transaction history, manage cards and contacts, and access the latest financial news.
@@ -833,13 +833,15 @@ Host: 127.0.0.1:8001
 - `pytest`: A framework that makes it easy to write simple tests.
 - `oauth2`: An implementation of OAuth 2.0 for secure authorization.
 
+**In order to run our product without a problem use the product-requirements.txt**
+
 **Note:** Ensure you have Python 3.11 or later installed on your system.
 
-**You can install these packages using pip:**
+**You can install these packages directly using pip:**
 
 ```http
 pip install fastapi passlib jose mariadb pydantic starlette pytest pytest-aiohttp pytest-asyncio httpx oauth2 pytest-mock python-multipart
 ```
 
-## Documentation Link
+## Documentation
 - [Swagger Documentation](http://127.0.0.1:8001/redoc)
