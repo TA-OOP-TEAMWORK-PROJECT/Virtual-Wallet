@@ -822,22 +822,12 @@ Host: 127.0.0.1:8001
 ```
 
 ## Required Packages
-**To run this project, you need to install the following packages:**
-
-- `fastapi`: A modern, fast (high-performance), web framework for building APIs with Python 3.6+ based on standard Python type hints.
-- `passlib`: A password hashing library for Python 2 & 3, which provides cross-platform implementations of over 30 password hashing algorithms.
-- `jose`: A JavaScript Object Signing and Encryption (JOSE) library for Python, which allows you to encode and decode JSON Web Tokens (JWT).
-- `mariadb`: A Python client library for MariaDB/MySQL, which allows Python programs to connect to a MariaDB or MySQL database.
-- `pydantic`: Data validation and settings management using Python type annotations.
-- `starlette`: A lightweight ASGI framework/toolkit, which is ideal for building high-performance asyncio services.
-- `pytest`: A framework that makes it easy to write simple tests.
-- `oauth2`: An implementation of OAuth 2.0 for secure authorization.
 
 **In order to run our product without a problem use the product-requirements.txt**
 
 **Note:** Ensure you have Python 3.11 or later installed on your system.
 
-**You can install these packages directly using pip:**
+**Or you can install these packages directly using pip:**
 
 ```http
 pip install aiohttp anyio APScheduler bcrypt certifi cffi charset-normalizer colorama cryptography email_validator fastapi h11 httpcore httpx idna mariadb multidict numpy packaging passlib pydantic pytest pytest-aiohttp pytest-asyncio pytest-mock python-dateutil python-jose python-multipart requests six sniffio starlette typing_extensions uvicorn DateTime mailjet
