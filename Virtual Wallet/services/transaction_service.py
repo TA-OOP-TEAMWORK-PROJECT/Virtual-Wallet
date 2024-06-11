@@ -473,7 +473,7 @@ def external_recurring_transaction(ext_rec_transaction: RecurringTransaction,
 
     user_wallet = get_user_wallet(cur_user.id)
 
-    if user_wallet.amount < ext_rec_transaction.amount:
+    if user_wallet.amount < ext_rec_transaction.amount: #
         raise HTTPException(status_code=400, detail='Not enough funds to complete the transaction')
 
     insert_query('''

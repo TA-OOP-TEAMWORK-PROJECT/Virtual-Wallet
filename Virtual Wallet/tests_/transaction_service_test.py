@@ -219,7 +219,7 @@ def test_external_recurring_transaction_when_wallet_amount_is_not_enough(mocker,
     mocker.patch('services.transaction_service.get_user_wallet', return_value=mock_user_wallet)
     mocker.patch('services.transaction_service.insert_query', return_value=1)
 
-    with pytest.raises(HTTPException) as exc_info:
+    with pytest.raises(HTTPException) as exc_info: #
         transaction_service.external_recurring_transaction(mock_recurring_transaction, mock_external_user, mock_user)
 
     assert exc_info.value.status_code == 400
