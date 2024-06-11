@@ -7,6 +7,7 @@ This project aims to create a secure and efficient Virtual Wallet System backend
 - [Project Structure](#project-structure)
 - [Database Schema](#database-schema)
 - [Setup and Run Instructions](#setup-and-run-instructions)
+- [Setup and Run Instructions With Docker](#setup-and-run-instructions-with-docker)
 - [Features](#features)
   - [Public Part](#public-part)
   - [Registered Users](#registered-users)
@@ -61,11 +62,68 @@ The Virtual Wallet application is a testament to the possibilities of digital fi
 ![finaldatabase](https://github.com/TA-OOP-TEAMWORK-PROJECT/Virtual-Wallet/assets/156197933/082f2a84-daa1-481d-80a7-45572179cd59)
 
 ## Setup and Run Instructions
-1. Clone the repository.
-2. Run the database scripts to create and populate the database.
-3. Configure the application settings (e.g., database connection, email service).
-4. Check the [Required Packages](#required-packages) section for further instructions.
-5. Run the application.
+
+1. **Clone the repository:**
+    ```sh
+    git clone https://github.com/TA-OOP-TEAMWORK-PROJECT/Virtual-Wallet.git
+    ```
+
+2. **Install dependencies:**
+    ```sh
+    pip install -r requirements.txt
+    ```
+    
+3. **Run the database scripts to create and populate the database.**
+
+4. **Update Configuration:**
+    In the config file in common folder, update your database credentials:
+    ```python
+    DB_USER = os.getenv('DB_USER', 'root')
+    DB_PASSWORD = os.getenv('DB_PASSWORD', 'your_password')
+    DB_HOST = os.getenv('DB_HOST', 'localhost')
+    DB_PORT = int(os.getenv('DB_PORT', 3306))
+    DB_NAME = os.getenv('DB_NAME', 'virtual_wallet')
+    ```
+
+5. **Run the application:**
+    ```sh
+    uvicorn app:app --reload
+    ```
+
+6. **For further instructions, check [Required Packages](#required-packages)**
+
+## Setup and Run Instructions With Docker
+**Note:** Do this steps after completing the process described in [Setup and Run Instructions](#setup-and-run-instructions)
+
+1. **Install Docker:**
+    - [Docker Desktop](https://www.docker.com/products/docker-desktop) for Windows and Mac
+    - [Docker Engine](https://docs.docker.com/engine/install/) for Linux
+
+2. **Update Configuration:**
+  
+    In the `.env` file, update your database credentials but leave the `DB_HOST` as it is:
+    ```env
+    DB_USER=root
+    DB_PASSWORD=your_password
+    DB_HOST=host.docker.internal
+    DB_PORT=3306
+    DB_NAME=virtual_wallet
+    ```
+
+3. **Run Docker commands:**
+    ```sh
+    docker-compose up --build -d # Creating the docker
+    docker-compose ps # Checking the status of the service
+    docker-compose logs # View the logs of all services
+    docker-compose down # Stop and remove the previous Docker Compose Setup
+    ```
+
+4. **Enable Virtual Machine:**
+    If Docker Desktop does not start, ensure virtualization is enabled in your BIOS:
+    - Restart your PC and enter the BIOS settings (usually by pressing `Del`, `F2`, or `Esc` during boot).
+    - Navigate to `Advanced Settings` > `CPU Configuration` and enable `SVM` (AMD) or `VT-x` (Intel).
+    - Save and exit the BIOS settings.
+
 
 ## Features
 
@@ -383,7 +441,7 @@ JSON body:
 - Allows user to create a new in-app transaction.
 
  ```http
-POST /transactions/in-app HTTP/1.1
+POST /transactions/new/in-app HTTP/1.1
 Host: 127.0.0.1:8001
 
 Headers:
@@ -402,7 +460,7 @@ JSON body:
 - Allows user to create a new bank transfer.
 
 ```http
-POST /transactions/bank-transfer HTTP/1.1
+POST /transactions/new/bank-transfer HTTP/1.1
 Host: 127.0.0.1:8001
 
 Headers:
@@ -437,7 +495,7 @@ JSON body:
 - Allows user to set an in-app recurring transaction.
 
 ```http
-POST /transactions/recurring/in-app HTTP/1.1
+POST /transactions/new/recurring/in-app HTTP/1.1
 Host: 127.0.0.1:8001
 
 Headers:
@@ -458,7 +516,7 @@ JSON body:
 - Allows user to set an external recurring transaction.
 
 ```http
-POST /transactions/recurring/bank-transfer HTTP/1.1
+POST /transactions/new/recurring/bank-transfer HTTP/1.1
 Host: 127.0.0.1:8001
 
 Headers:
