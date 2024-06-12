@@ -20,13 +20,16 @@ external_pending_confirmations: Dict[str, Dict] = {}
 internal_pending_confirmations: Dict[str, Dict] = {}
 
 
-
-
 @transaction_router.on_event('startup')
 async def startup_event():
 
-    cron_trigger = CronTrigger(hour=12, minute=0)
-    scheduler.add_job(recurring_transactions, cron_trigger)
+    cron_trigger_one = CronTrigger(hour=12, minute=0)
+    cron_trigger_two = CronTrigger(hour=18, minute=0)
+    cron_trigger_third = CronTrigger(hour=23, minute=0)
+
+    scheduler.add_job(recurring_transactions, cron_trigger_one)
+    scheduler.add_job(recurring_transactions, cron_trigger_two)
+    scheduler.add_job(recurring_transactions, cron_trigger_third)
 
     scheduler.start()
 
