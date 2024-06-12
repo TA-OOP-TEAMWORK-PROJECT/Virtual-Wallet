@@ -896,4 +896,4 @@ pip install aiohttp anyio APScheduler bcrypt certifi cffi charset-normalizer col
 
 **If you are interested in our project and want to take a closer look, after downloading and installing the requirements, check our documentation.**
 
-- You can do that do that by either using FastAPI /docs or /redoc
+- You can do that by either using FastAPI /docs or /redoc
