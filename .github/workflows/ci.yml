@@ -21,4 +21,4 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Run tests (smoke only)
-        run: pytest -q -k ci_smoke
+        run: pytest -q 'Virtual Wallet/tests/quality/test_ci_smoke.py'
